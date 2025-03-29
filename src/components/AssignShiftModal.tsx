@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
+import { useTranslation } from 'react-i18next';
 import { RootState } from '../store';
 import { assignShift, closeModal, mockRoles } from '../store/shiftsSlice';
 
 const AssignShiftModal: React.FC = () => {
+  const { t } = useTranslation();
   const dispatch = useDispatch();
   const selectedShift = useSelector((state: RootState) => state.shifts.selectedShift);
   const employees = useSelector((state: RootState) => state.shifts.employees);
@@ -28,13 +30,13 @@ const AssignShiftModal: React.FC = () => {
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
         <h2 className="text-xl font-bold mb-4">
-          Assign Shift - {selectedShift.day}, {selectedShift.timeSlot}
+          {t('shiftAssignment.assignTo')} {t(`days.${selectedShift.day.toLowerCase()}`)}, {t(`timeSlots.${selectedShift.timeSlot.toLowerCase()}`)}
         </h2>
         
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
             <label htmlFor="employee" className="block text-sm font-medium text-gray-700 mb-1">
-              Employee
+              {t('shiftAssignment.assignEmployee')}
             </label>
             <select
               id="employee"
@@ -43,7 +45,7 @@ const AssignShiftModal: React.FC = () => {
               onChange={(e) => setEmployeeId(e.target.value)}
               required
             >
-              <option value="">Select an employee</option>
+              <option value="">{t('shiftAssignment.selectEmployee')}</option>
               {employees.map((employee: { id: string; name: string; role: string }) => (
                 <option key={employee.id} value={employee.id}>
                   {employee.name} ({employee.role})
@@ -54,7 +56,7 @@ const AssignShiftModal: React.FC = () => {
           
           <div className="mb-6">
             <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-1">
-              Task (Optional)
+              {t('shiftAssignment.role')} (Optional)
             </label>
             <select
               id="role"
@@ -62,7 +64,7 @@ const AssignShiftModal: React.FC = () => {
               value={role || ''}
               onChange={(e) => setRole(e.target.value || null)}
             >
-              <option value="">Select a task</option>
+              <option value="">{t('shiftAssignment.selectRole')}</option>
               {mockRoles.map(taskRole => (
                 <option key={taskRole} value={taskRole}>
                   {taskRole}
@@ -77,14 +79,14 @@ const AssignShiftModal: React.FC = () => {
               className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
               onClick={handleCancel}
             >
-              Cancel
+              {t('common.close')}
             </button>
             <button
               type="submit"
               className="px-4 py-2 bg-primary-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-primary-700"
               disabled={!employeeId}
             >
-              Assign
+              {t('shiftAssignment.assignEmployee')}
             </button>
           </div>
         </form>

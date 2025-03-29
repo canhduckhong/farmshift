@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
+import { useTranslation } from 'react-i18next';
 import { RootState } from '../store';
 import { Shift, selectShift, clearShift, moveEmployeeBetweenShifts } from '../store/shiftsSlice';
 
@@ -8,6 +9,7 @@ interface WeeklyCalendarProps {
 }
 
 const WeeklyCalendar: React.FC<WeeklyCalendarProps> = ({ useAiSuggestions = false }) => {
+  const { t } = useTranslation();
   const dispatch = useDispatch();
   const shifts = useSelector((state: RootState) => 
     useAiSuggestions ? state.shifts.aiSuggestions || [] : state.shifts.shifts
@@ -117,15 +119,15 @@ const WeeklyCalendar: React.FC<WeeklyCalendarProps> = ({ useAiSuggestions = fals
         style={{ opacity: isDragging ? 1 : 0 }}>
         {isDragging && (
           dragAction === 'swap' ? 
-            '✨ Drop on an occupied shift to swap employees' : 
-            '✨ Drop on an empty shift to move employee'
+            t('dragDrop.swapEmployees') : 
+            t('dragDrop.moveEmployee')
         )}
       </div>
       <div className="grid grid-cols-8 border-b">
-        <div className="p-3 font-medium text-gray-500 border-r">Time Slot</div>
+        <div className="p-3 font-medium text-gray-500 border-r">{t('common.timeSlot')}</div>
         {days.map((day) => (
           <div key={day} className="p-3 font-medium text-center text-gray-800 border-r">
-            {day}
+            {t(`days.${day.toLowerCase()}`)}
           </div>
         ))}
       </div>
@@ -133,7 +135,7 @@ const WeeklyCalendar: React.FC<WeeklyCalendarProps> = ({ useAiSuggestions = fals
       {timeSlots.map((timeSlot) => (
         <div key={timeSlot} className="grid grid-cols-8 border-b">
           <div className="p-3 font-medium text-gray-500 border-r flex items-center">
-            {timeSlot}
+            {t(`timeSlots.${timeSlot.toLowerCase()}`)}
           </div>
           
           {days.map((day) => {
@@ -174,7 +176,7 @@ const WeeklyCalendar: React.FC<WeeklyCalendarProps> = ({ useAiSuggestions = fals
                     </div>
                   ) : (
                     <div className="flex items-center justify-center h-full text-gray-400">
-                      + Add
+                      + {t('common.add')}
                     </div>
                   )}
                 </div>

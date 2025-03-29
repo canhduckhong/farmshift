@@ -6,6 +6,9 @@ import './index.css';
 import App from './App';
 import { store } from './store';
 
+// Import i18n (must be before app renders)
+import './i18n';
+
 // Get root element
 const rootElement = document.getElementById('root');
 

@@ -1,0 +1,52 @@
+{
+  "common": {
+    "weeklySchedule": "Weekly Schedule",
+    "add": "Add",
+    "timeSlot": "Time Slot",
+    "generate": "Generate AI Schedule",
+    "generating": "Generating...",
+    "apply": "Apply",
+    "discard": "Discard",
+    "close": "Close"
+  },
+  "timeSlots": {
+    "morning": "Morning",
+    "afternoon": "Afternoon",
+    "evening": "Evening"
+  },
+  "days": {
+    "monday": "Monday",
+    "tuesday": "Tuesday",
+    "wednesday": "Wednesday",
+    "thursday": "Thursday",
+    "friday": "Friday",
+    "saturday": "Saturday",
+    "sunday": "Sunday"
+  },
+  "aiScheduler": {
+    "title": "AI-Assisted Scheduling",
+    "showSettings": "Show Settings",
+    "hideSettings": "Hide Settings",
+    "schedulingRules": "Scheduling Rules",
+    "validationRules": "Validation Rules",
+    "prioritizeSkillMatch": "Prioritize employees with matching skills",
+    "respectPreferences": "Respect employee time preferences",
+    "scheduleGenerated": "AI Schedule Generated!",
+    "reviewSuggestions": "Review the suggested schedule below. You can apply it or continue with your current schedule.",
+    "outOf": "out of",
+    "shiftsAssigned": "shifts assigned",
+    "applySuggestions": "Apply Suggested Schedule",
+    "description": "The AI scheduler considers employee qualifications, preferences, and compliance regulations to generate an optimal schedule."
+  },
+  "dragDrop": {
+    "moveEmployee": "✨ Drop on an empty shift to move employee",
+    "swapEmployees": "✨ Drop on an occupied shift to swap employees"
+  },
+  "shiftAssignment": {
+    "assignEmployee": "Assign Employee",
+    "assignTo": "Assign to",
+    "role": "Role",
+    "selectEmployee": "Select an employee",
+    "selectRole": "Select a role"
+  }
+}
