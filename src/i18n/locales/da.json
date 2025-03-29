@@ -7,7 +7,12 @@
     "generating": "Genererer...",
     "apply": "Anvend",
     "discard": "Annuller",
-    "close": "Luk"
+    "close": "Luk",
+    "save": "Gem"
+  },
+  "navigation": {
+    "schedule": "Vagtplan",
+    "employees": "Medarbejdere"
   },
   "timeSlots": {
     "morning": "Morgen",
@@ -48,5 +53,28 @@
     "role": "Rolle",
     "selectEmployee": "Vælg en medarbejder",
     "selectRole": "Vælg en rolle"
+  },
+  "employees": {
+    "title": "Medarbejder Administration",
+    "addEmployee": "Tilføj Medarbejder",
+    "editEmployee": "Rediger Medarbejder",
+    "name": "Navn",
+    "role": "Stilling",
+    "type": "Ansættelsestype",
+    "skills": "Kompetencer",
+    "actions": "Handlinger",
+    "edit": "Rediger",
+    "delete": "Slet",
+    "save": "Gem",
+    "add": "Tilføj",
+    "confirmDelete": "Er du sikker på, at du vil slette denne medarbejder?",
+    "employmentType": "Ansættelsestype",
+    "maxShifts": "Maksimalt antal vagter pr. uge",
+    "preferredShifts": "Foretrukne vagter",
+    "preferredDaysOff": "Foretrukne fridage",
+    "types": {
+      "fulltime": "Fuldtid",
+      "intern": "Praktikant"
+    }
   }
 }

@@ -132,6 +132,8 @@ export interface ShiftsState {
   isGeneratingSchedule: boolean;
   aiSuggestions: Shift[] | null;
   showSuggestions: boolean;
+  selectedEmployee: Employee | null;
+  isEmployeeModalOpen: boolean;
 }
 
 const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -192,7 +194,9 @@ const initialState: ShiftsState = {
   },
   isGeneratingSchedule: false,
   aiSuggestions: null,
-  showSuggestions: false
+  showSuggestions: false,
+  selectedEmployee: null,
+  isEmployeeModalOpen: false
 };
 
 export const shiftsSlice = createSlice({
@@ -261,6 +265,51 @@ export const shiftsSlice = createSlice({
       }
     },
     
+    // Employee Management
+    addEmployee: (state, action: PayloadAction<Omit<Employee, 'id'>>) => {
+      const newId = (Math.max(...state.employees.map(e => parseInt(e.id))) + 1).toString();
+      const newEmployee = {
+        ...action.payload,
+        id: newId
+      };
+      state.employees.push(newEmployee);
+    },
+
+    updateEmployee: (state, action: PayloadAction<Employee>) => {
+      const index = state.employees.findIndex(e => e.id === action.payload.id);
+      if (index !== -1) {
+        state.employees[index] = action.payload;
+      }
+    },
+
+    deleteEmployee: (state, action: PayloadAction<string>) => {
+      // Remove employee from shifts first
+      state.shifts.forEach(shift => {
+        if (shift.employeeId === action.payload) {
+          shift.employeeId = null;
+          shift.role = null;
+        }
+      });
+      
+      // Then remove from employees list
+      state.employees = state.employees.filter(e => e.id !== action.payload);
+    },
+
+    selectEmployee: (state, action: PayloadAction<string>) => {
+      state.selectedEmployee = state.employees.find(e => e.id === action.payload) || null;
+      state.isEmployeeModalOpen = true;
+    },
+
+    closeEmployeeModal: (state) => {
+      state.selectedEmployee = null;
+      state.isEmployeeModalOpen = false;
+    },
+
+    openNewEmployeeModal: (state) => {
+      state.selectedEmployee = null;
+      state.isEmployeeModalOpen = true;
+    },
+
     // Drag and drop functionality for shifts
     moveEmployeeBetweenShifts: (state, action: PayloadAction<{sourceShiftId: string; targetShiftId: string}>) => {
       const { sourceShiftId, targetShiftId } = action.payload;
@@ -315,7 +364,13 @@ export const {
   discardSuggestions,
   updateAiConfig,
   toggleValidationRule,
-  moveEmployeeBetweenShifts
+  moveEmployeeBetweenShifts,
+  addEmployee,
+  updateEmployee,
+  deleteEmployee,
+  selectEmployee,
+  closeEmployeeModal,
+  openNewEmployeeModal
 } = shiftsSlice.actions;
 
 export default shiftsSlice.reducer;
