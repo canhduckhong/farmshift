@@ -46,7 +46,8 @@ defmodule FarmshiftBackend.MixProject do
       # Authentication packages
       {:guardian, "~> 2.3"},
       {:bcrypt_elixir, "~> 3.0"},
-      {:corsica, "~> 2.0"}
+      {:corsica, "~> 2.0"},
+      {:cors_plug, "~> 3.0"}
     ]
   end
 

@@ -1,13 +1,21 @@
 defmodule FarmshiftBackendWeb.Router do
   use FarmshiftBackendWeb, :router
 
+  # Apply CORS before any other pipeline
+  pipeline :cors do
+    plug Corsica,
+      origins: ["http://localhost:3000", "http://localhost:5173", "http://127.0.0.1:3000", "http://127.0.0.1:5173"], 
+      allow_headers: ["content-type", "accept", "authorization", "origin"],
+      allow_credentials: true,
+      max_age: 600
+  end
+
   pipeline :api do
     plug :accepts, ["json"]
   end
   
   pipeline :auth do
     plug :accepts, ["json"]
-    plug Corsica, origins: "*", allow_headers: :all
     # Guardian authentication pipeline
     plug Guardian.Plug.Pipeline,
       module: FarmshiftBackend.Auth.Guardian,
@@ -20,9 +28,15 @@ defmodule FarmshiftBackendWeb.Router do
     plug Guardian.Plug.EnsureAuthenticated
   end
 
+  # Handle OPTIONS preflight requests for all routes
+  scope "/api" do
+    pipe_through [:cors]
+    options "/*path", FarmshiftBackendWeb.AuthController, :options
+  end
+
   # Public routes that don't require authentication
   scope "/api", FarmshiftBackendWeb do
-    pipe_through :auth
+    pipe_through [:cors, :api, :auth]
     
     post "/register", AuthController, :register
     post "/login", AuthController, :login
@@ -30,7 +44,7 @@ defmodule FarmshiftBackendWeb.Router do
   
   # Protected routes that require authentication
   scope "/api", FarmshiftBackendWeb do
-    pipe_through [:auth, :ensure_auth]
+    pipe_through [:cors, :api, :auth, :ensure_auth]
     
     get "/current_user", AuthController, :current_user
     post "/logout", AuthController, :logout

@@ -8,7 +8,10 @@
     "apply": "Apply",
     "discard": "Discard",
     "close": "Close",
-    "save": "Save"
+    "save": "Save",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success"
   },
   "navigation": {
     "schedule": "Schedule",
@@ -76,5 +79,22 @@
       "fulltime": "Full-time",
       "intern": "Intern"
     }
+  },
+  "auth": {
+    "login": "Sign In",
+    "register": "Sign Up",
+    "logout": "Sign Out",
+    "createAccount": "Create an account",
+    "emailAddress": "Email address",
+    "password": "Password",
+    "confirmPassword": "Confirm password",
+    "fullName": "Full name",
+    "or": "Or",
+    "demoCredentials": "Demo Credentials",
+    "passwordsDoNotMatch": "Passwords do not match",
+    "passwordTooShort": "Password must be at least 6 characters long",
+    "loginSuccess": "Successfully logged in",
+    "registerSuccess": "Account created successfully",
+    "logoutSuccess": "Successfully logged out"
   }
 }

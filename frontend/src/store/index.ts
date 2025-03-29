@@ -1,10 +1,12 @@
 import { configureStore } from '@reduxjs/toolkit';
 import shiftsReducer from './shiftsSlice';
+import authReducer from './authSlice';
 import { RootState } from '../types';
 
 export const store = configureStore({
   reducer: {
     shifts: shiftsReducer,
+    auth: authReducer,
   },
 });
 

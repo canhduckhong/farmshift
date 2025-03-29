@@ -3,6 +3,20 @@ defmodule FarmshiftBackendWeb.AuthController do
 
   alias FarmshiftBackend.Accounts
   alias FarmshiftBackend.Auth.Guardian
+  
+  # Handle CORS preflight requests
+  def options(conn, _params) do
+    # Get the origin from the request
+    origin = List.first(Plug.Conn.get_req_header(conn, "origin")) || "*"
+    
+    conn
+    |> put_resp_header("access-control-allow-origin", origin)
+    |> put_resp_header("access-control-allow-methods", "GET, POST, PUT, DELETE, OPTIONS")
+    |> put_resp_header("access-control-allow-headers", "authorization, content-type, accept, origin")
+    |> put_resp_header("access-control-allow-credentials", "true")
+    |> put_resp_header("access-control-max-age", "600")
+    |> send_resp(204, "")
+  end
 
   def register(conn, %{"user" => user_params}) do
     case Accounts.create_user(user_params) do

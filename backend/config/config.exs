@@ -37,9 +37,11 @@ config :farmshift_backend, FarmshiftBackend.Auth.Guardian,
 
 # CORS configuration
 config :corsica,
-  origins: ["*"],
-  allow_headers: :all,
-  allow_methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+  origins: ["http://localhost:3000", "http://localhost:5173", "http://127.0.0.1:3000", "http://127.0.0.1:5173"],
+  allow_headers: ["content-type", "accept", "authorization", "origin"],
+  allow_methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allow_credentials: true,
+  max_age: 600
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
