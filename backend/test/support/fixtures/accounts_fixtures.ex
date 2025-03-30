@@ -7,7 +7,7 @@ defmodule FarmshiftBackend.AccountsFixtures do
   @doc """
   Generate a unique user email.
   """
-  def unique_user_email, do: "some email#{System.unique_integer([:positive])}"
+  def unique_user_email, do: "some_email_#{System.unique_integer([:positive])}@example.com"
 
   @doc """
   Generate a user.
@@ -18,7 +18,8 @@ defmodule FarmshiftBackend.AccountsFixtures do
       |> Enum.into(%{
         email: unique_user_email(),
         name: "some name",
-        password_hash: "some password_hash",
+        password: "password123",
+        password_confirmation: "password123",
         role: "some role"
       })
       |> FarmshiftBackend.Accounts.create_user()

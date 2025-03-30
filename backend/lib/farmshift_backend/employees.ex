@@ -109,4 +109,38 @@ defmodule FarmshiftBackend.Employees do
   def delete_employee(%Employee{} = employee) do
     Repo.delete(employee)
   end
+
+  @doc """
+  Returns a list of active employees available for scheduling.
+
+  Active employees are those who are:
+  - Currently employed (not terminated)
+  - Have a valid employment type (fulltime or parttime)
+  - Have at least one skill
+
+  ## Examples
+
+      iex> list_active_employees()
+      [%Employee{}, ...]
+  """
+  def list_active_employees do
+    Employee
+    |> where([e], e.employment_type in ["fulltime", "parttime"])
+    |> where([e], fragment("array_length(?, 1) > 0", e.skills))
+    |> where([e], is_nil(e.termination_date) or e.termination_date > fragment("CURRENT_DATE"))
+    |> Repo.all()
+    |> Enum.map(fn employee ->
+      %{
+        id: employee.id,
+        name: employee.name,
+        skills: employee.skills,
+        employment_type: employee.employment_type,
+        max_shifts_per_week: employee.max_shifts_per_week || 5,
+        preferences: %{
+          preferred_days_off: employee.preferred_days_off || [],
+          preferred_shifts: employee.preferred_shifts || []
+        }
+      }
+    end)
+  end
 end

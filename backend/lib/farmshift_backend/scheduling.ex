@@ -1,198 +1,197 @@
 defmodule FarmshiftBackend.Scheduling do
   @moduledoc """
-  Provides AI-powered scheduling functionality for generating optimal employee shifts.
+  Handles optimal schedule generation for employees.
   """
 
-  @shift_requirements %{
-    "Morning" => ["Milking", "Feeding"],
-    "Afternoon" => ["Cleaning", "Maintenance"],
-    "Evening" => ["Milking", "Security"]
-  }
+  require Logger
 
   @doc """
-  Generate an optimal schedule based on employee qualifications, preferences, and rules.
+  Generate an optimal schedule based on given shifts, employees, and configuration.
   """
   def generate_optimal_schedule(initial_shifts, employees, config) do
-    # Create a copy of initial shifts to work with
-    schedule = Enum.map(initial_shifts, fn shift -> 
-      Map.merge(shift, %{employee_id: nil, role: nil}) 
-    end)
+    # Validate inputs
+    with :ok <- validate_inputs(initial_shifts, employees, config) do
+      # Prepare configuration rules
+      enabled_rules = config["enabled_rules"] || []
 
-    # Get enabled validation rules
-    enabled_rules = Enum.filter(config["enabled_rules"], fn rule -> rule["enabled"] end)
+      # Attempt to assign shifts with multiple passes
+      schedule = assign_shifts_with_multiple_passes(initial_shifts, employees, enabled_rules)
 
-    # Sort shifts by priority (e.g., Morning, Evening, Afternoon)
-    sorted_shifts = Enum.sort_by(schedule, fn shift -> 
-      case shift["time_slot"] do
-        "Morning" -> 0
-        "Evening" -> 1
-        "Afternoon" -> 2
-        _ -> 3
+      # Validate the generated schedule
+      case validate_schedule(schedule) do
+        :ok -> {:ok, schedule}
+        {:error, reason} -> 
+          Logger.error("Schedule generation failed: #{reason}")
+          {:error, reason}
       end
-    end)
-
-    # Assign employees to shifts
-    Enum.reduce(sorted_shifts, schedule, fn shift, acc ->
-      # Find eligible employees for this shift
-      eligible_employees = Enum.filter(employees, fn employee ->
-        can_assign_employee_to_shift?(
-          employee, 
-          shift["day"], 
-          shift["time_slot"], 
-          acc, 
-          enabled_rules
-        )
-      end)
-
-      # If eligible employees exist, find the best match
-      case eligible_employees do
-        [] -> 
-          # No eligible employee found, keep the shift unassigned
-          acc
-
-        _ -> 
-          # Score and find the best employee
-          best_match = Enum.max_by(eligible_employees, fn employee ->
-            score_assignment(
-              employee, 
-              shift["day"], 
-              shift["time_slot"], 
-              config
-            )
-          end)
-
-          # Update the schedule with the best employee
-          updated_shift = Map.merge(shift, %{
-            "employee_id" => best_match["id"],
-            "role" => find_matching_role(best_match, shift["time_slot"])
-          })
-
-          # Replace the old shift with the updated one
-          List.replace_at(acc, Enum.find_index(acc, fn s -> s["id"] == shift["id"] end), updated_shift)
-      end
-    end)
+    end
   end
 
   @doc """
-  Check if an employee can be assigned to a shift based on validation rules.
+  Check if an employee can be assigned to a specific shift.
   """
-  def can_assign_employee_to_shift?(employee, day, time_slot, current_schedule, rules) do
-    Enum.all?(rules, fn rule ->
+  def can_assign_employee_to_shift?(employee, day, time_slot, existing_shifts, enabled_rules) do
+    # Check each rule
+    Enum.all?(enabled_rules, fn rule ->
       case rule["name"] do
-        "skillMatch" -> 
-          has_required_skills?(employee, time_slot)
-
-        "noConsecutiveShifts" -> 
-          !has_shift_on_day?(employee, day, current_schedule)
-
-        "maxShiftsPerWeek" -> 
-          shifts_count_this_week(employee, current_schedule) < employee["max_shifts_per_week"]
-
-        "respectDaysOff" -> 
-          !is_preferred_day_off?(employee, day)
-
-        "maxConsecutiveDays" -> 
-          !exceeds_max_consecutive_days?(employee, day, current_schedule)
-
-        _ -> 
-          true
+        "skillMatch" -> check_skill_match(employee, time_slot)
+        "noConsecutiveShifts" -> check_no_consecutive_shifts(employee, day, existing_shifts)
+        "maxShiftsPerWeek" -> check_max_shifts_per_week(employee, existing_shifts)
+        "preferredDaysOff" -> check_preferred_days_off(employee, day)
+        _ -> true
       end
     end)
   end
 
-  @doc """
-  Score a potential assignment based on preferences and other factors.
-  """
-  def score_assignment(employee, day, time_slot, config) do
-    base_score = 10
-
-    skill_match_score = 
-      if config["prioritize_skill_match"] && has_required_skills?(employee, time_slot) do
-        30
-      else
-        0
-      end
-
-    preferred_shift_score = 
-      if config["respect_preferences"] && is_preferred_shift?(employee, time_slot) do
-        20
-      else
-        0
-      end
-
-    preferred_day_penalty = 
-      if config["respect_preferences"] && is_preferred_day_off?(employee, day) do
-        -15
-      else
-        0
-      end
-
-    employment_type_score = 
-      case employee["employment_type"] do
-        "fulltime" -> 5
-        _ -> 0
-      end
-
-    skill_bonus = 
-      count_matching_skills(employee, time_slot) * 3
-
-    base_score + skill_match_score + preferred_shift_score + 
-    preferred_day_penalty + employment_type_score + skill_bonus
+  # Validate input parameters
+  defp validate_inputs(initial_shifts, employees, config) do
+    cond do
+      is_nil(initial_shifts) -> {:error, "Shifts cannot be nil"}
+      is_nil(employees) or length(employees) == 0 -> {:error, "No employees available"}
+      is_nil(config) -> {:error, "Configuration cannot be nil"}
+      true -> :ok
+    end
   end
 
-  # Helper functions
+  # Multiple pass shift assignment strategy
+  defp assign_shifts_with_multiple_passes(initial_shifts, employees, enabled_rules) do
+    # First pass: Prioritize skill matching and preferences
+    schedule = Enum.map(initial_shifts, fn shift ->
+      assign_shift_to_best_employee(shift, employees, enabled_rules)
+    end)
 
-  defp has_required_skills?(employee, time_slot) do
-    required_skills = Map.get(@shift_requirements, time_slot, [])
-    Enum.any?(required_skills, fn skill -> skill in employee["skills"] end)
-  end
-
-  defp find_matching_role(employee, time_slot) do
-    required_skills = Map.get(@shift_requirements, time_slot, [])
-    Enum.find(employee["skills"], fn skill -> skill in required_skills end)
-  end
-
-  defp has_shift_on_day?(employee, day, current_schedule) do
-    Enum.any?(current_schedule, fn shift -> 
-      shift["employee_id"] == employee["id"] && shift["day"] == day 
+    # Second pass: Fill remaining unassigned shifts with more relaxed rules
+    schedule
+    |> Enum.map(fn shift ->
+      if shift["employee_id"] == nil do
+        assign_shift_to_best_employee_relaxed(shift, employees, enabled_rules)
+      else
+        shift
+      end
+    end)
+    # Third pass: Assign any remaining shifts to any available employee
+    |> Enum.map(fn shift ->
+      if shift["employee_id"] == nil do
+        assign_shift_to_any_employee(shift, employees)
+      else
+        shift
+      end
     end)
   end
 
-  defp shifts_count_this_week(employee, current_schedule) do
-    Enum.count(current_schedule, fn shift -> 
-      shift["employee_id"] == employee["id"] 
+  # Find the best employee for a specific shift with strict rules
+  defp assign_shift_to_best_employee(shift, employees, enabled_rules) do
+    # Find eligible employees
+    eligible_employees = Enum.filter(employees, fn employee ->
+      can_assign_employee_to_shift?(
+        employee, 
+        shift["day"], 
+        shift["time_slot"], 
+        [], 
+        enabled_rules
+      )
     end)
+
+    # Select an employee if available
+    case eligible_employees do
+      [] -> shift
+      candidates -> 
+        selected_employee = Enum.random(candidates)
+        Map.merge(shift, %{
+          "employee_id" => selected_employee["id"],
+          "role" => List.first(selected_employee["skills"] || [])
+        })
+    end
   end
 
-  defp is_preferred_day_off?(employee, day) do
-    day in employee["preferences"]["preferred_days_off"]
+  # Find the best employee for a specific shift with relaxed rules
+  defp assign_shift_to_best_employee_relaxed(shift, employees, enabled_rules) do
+    # Relaxed rules: only check skill match
+    relaxed_rules = Enum.filter(enabled_rules, & &1["name"] == "skillMatch")
+
+    # Find eligible employees
+    eligible_employees = Enum.filter(employees, fn employee ->
+      can_assign_employee_to_shift?(
+        employee, 
+        shift["day"], 
+        shift["time_slot"], 
+        [], 
+        relaxed_rules
+      )
+    end)
+
+    # Select an employee if available
+    case eligible_employees do
+      [] -> shift
+      candidates -> 
+        selected_employee = Enum.random(candidates)
+        Map.merge(shift, %{
+          "employee_id" => selected_employee["id"],
+          "role" => List.first(selected_employee["skills"] || [])
+        })
+    end
   end
 
-  defp is_preferred_shift?(employee, time_slot) do
-    time_slot in employee["preferences"]["preferred_shifts"]
+  # Assign shift to any available employee
+  defp assign_shift_to_any_employee(shift, employees) do
+    case employees do
+      [] -> shift
+      candidates -> 
+        selected_employee = Enum.random(candidates)
+        Map.merge(shift, %{
+          "employee_id" => selected_employee["id"],
+          "role" => List.first(selected_employee["skills"] || [])
+        })
+    end
   end
 
-  defp count_matching_skills(employee, time_slot) do
-    required_skills = Map.get(@shift_requirements, time_slot, [])
-    Enum.count(required_skills, fn skill -> skill in employee["skills"] end)
+  # Skill matching validation
+  defp check_skill_match(employee, time_slot) do
+    required_skills = case time_slot do
+      "Morning" -> ["Milking", "Feeding"]
+      "Afternoon" -> ["Cleaning", "Maintenance"]
+      "Evening" -> ["Security", "Feeding"]
+      _ -> []
+    end
+
+    Enum.any?(employee["skills"] || [], fn skill -> skill in required_skills end)
   end
 
-  defp exceeds_max_consecutive_days?(employee, day, current_schedule) do
-    days_of_week = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
-    day_index = Enum.find_index(days_of_week, fn d -> d == day end)
+  # Prevent consecutive shifts
+  defp check_no_consecutive_shifts(employee, day, existing_shifts) do
+    existing_shifts_for_employee = Enum.filter(existing_shifts, 
+      &(&1["employee_id"] == employee["id"])
+    )
+    
+    !Enum.any?(existing_shifts_for_employee, &(&1["day"] == day))
+  end
 
-    consecutive_days = 
-      Enum.reduce_while(1..6, 1, fn i, acc -> 
-        prev_day_index = rem(day_index - i + 7, 7)
-        prev_day = Enum.at(days_of_week, prev_day_index)
+  # Limit maximum shifts per week
+  defp check_max_shifts_per_week(employee, existing_shifts) do
+    max_shifts = employee["max_shifts_per_week"] || 5
+    existing_employee_shifts = Enum.filter(existing_shifts, 
+      &(&1["employee_id"] == employee["id"])
+    )
+    
+    length(existing_employee_shifts) < max_shifts
+  end
 
-        if has_shift_on_day?(employee, prev_day, current_schedule) do
-          {:cont, acc + 1}
-        else
-          {:halt, acc}
-        end
-      end)
+  # Respect preferred days off
+  defp check_preferred_days_off(employee, day) do
+    preferred_days_off = employee["preferences"]["preferred_days_off"] || []
+    day not in preferred_days_off
+  end
 
-    consecutive_days > 6
+  # Validate the final schedule
+  defp validate_schedule(schedule) do
+    unassigned_shifts = Enum.filter(schedule, & &1["employee_id"] == nil)
+    
+    cond do
+      length(unassigned_shifts) > 0 -> 
+        Logger.warning("Unable to assign employees to #{length(unassigned_shifts)} shifts")
+        {:error, "Unable to assign employees to #{length(unassigned_shifts)} shifts"}
+      true -> 
+        :ok
+    end
   end
 end

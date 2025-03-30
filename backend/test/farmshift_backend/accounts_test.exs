@@ -8,7 +8,13 @@ defmodule FarmshiftBackend.AccountsTest do
 
     import FarmshiftBackend.AccountsFixtures
 
-    @invalid_attrs %{name: nil, role: nil, email: nil, password_hash: nil}
+    @invalid_attrs %{
+      name: nil, 
+      role: nil, 
+      email: nil, 
+      password: nil, 
+      password_confirmation: nil
+    }
 
     test "list_users/0 returns all users" do
       user = user_fixture()
@@ -21,13 +27,19 @@ defmodule FarmshiftBackend.AccountsTest do
     end
 
     test "create_user/1 with valid data creates a user" do
-      valid_attrs = %{name: "some name", role: "some role", email: "some email", password_hash: "some password_hash"}
+      valid_attrs = %{
+        name: "John Doe", 
+        role: "employee", 
+        email: "john.doe@example.com", 
+        password: "secure_password123",
+        password_confirmation: "secure_password123"
+      }
 
       assert {:ok, %User{} = user} = Accounts.create_user(valid_attrs)
-      assert user.name == "some name"
-      assert user.role == "some role"
-      assert user.email == "some email"
-      assert user.password_hash == "some password_hash"
+      assert user.name == "John Doe"
+      assert user.role == "employee"
+      assert user.email == "john.doe@example.com"
+      assert user.password_hash != nil
     end
 
     test "create_user/1 with invalid data returns error changeset" do
@@ -36,13 +48,16 @@ defmodule FarmshiftBackend.AccountsTest do
 
     test "update_user/2 with valid data updates the user" do
       user = user_fixture()
-      update_attrs = %{name: "some updated name", role: "some updated role", email: "some updated email", password_hash: "some updated password_hash"}
+      update_attrs = %{
+        name: "Updated Name", 
+        role: "admin", 
+        email: "updated.email@example.com"
+      }
 
-      assert {:ok, %User{} = user} = Accounts.update_user(user, update_attrs)
-      assert user.name == "some updated name"
-      assert user.role == "some updated role"
-      assert user.email == "some updated email"
-      assert user.password_hash == "some updated password_hash"
+      assert {:ok, %User{} = updated_user} = Accounts.update_user(user, update_attrs)
+      assert updated_user.name == "Updated Name"
+      assert updated_user.role == "admin"
+      assert updated_user.email == "updated.email@example.com"
     end
 
     test "update_user/2 with invalid data returns error changeset" do
@@ -57,9 +72,9 @@ defmodule FarmshiftBackend.AccountsTest do
       assert_raise Ecto.NoResultsError, fn -> Accounts.get_user!(user.id) end
     end
 
-    test "change_user/1 returns a user changeset" do
+    test "change_user_registration/2 returns a user changeset" do
       user = user_fixture()
-      assert %Ecto.Changeset{} = Accounts.change_user(user)
+      assert %Ecto.Changeset{} = Accounts.change_user_registration(user)
     end
   end
 end
