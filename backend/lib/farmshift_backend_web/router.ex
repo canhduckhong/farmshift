@@ -51,6 +51,7 @@ defmodule FarmshiftBackendWeb.Router do
     
     post "/register", AuthController, :register
     post "/login", AuthController, :login
+    resources "/employees", EmployeesController, except: [:new, :edit]
   end
   
   # Protected routes that require authentication
