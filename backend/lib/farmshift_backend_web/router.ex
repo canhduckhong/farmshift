@@ -55,6 +55,7 @@ defmodule FarmshiftBackendWeb.Router do
     resources "/shifts", ShiftController, except: [:new, :edit]
     post "/shifts/assign", ShiftController, :assign
     delete "/shifts/unassign/:id", ShiftController, :unassign
+    post "/schedule/generate", ScheduleController, :generate_schedule
   end
   
   # Protected routes that require authentication
