@@ -9,19 +9,29 @@ defmodule FarmshiftBackend.Auth.Guardian do
 
   @doc """
   Used by Guardian to fetch the resource for a token.
+  Converts the user ID to a string for token generation.
   """
   def subject_for_token(user, _claims) do
-    sub = to_string(user.id)
-    {:ok, sub}
+    # Ensure the user ID is converted to a string
+    {:ok, to_string(user.id)}
   end
 
   @doc """
   Used by Guardian to build a resource from a token claim.
+  Handles UUID-based user lookup.
   """
   def resource_from_claims(claims) do
+    # Extract the user ID from claims
     id = claims["sub"]
-    resource = Accounts.get_user!(id)
-    {:ok, resource}
+
+    # Validate and fetch the user
+    case Ecto.UUID.cast(id) do
+      {:ok, uuid} ->
+        resource = Accounts.get_user!(uuid)
+        {:ok, resource}
+      :error ->
+        {:error, :invalid_token}
+    end
   rescue
     Ecto.NoResultsError -> {:error, :resource_not_found}
   end

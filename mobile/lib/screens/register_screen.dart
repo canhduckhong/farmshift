@@ -1,35 +1,57 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:farmshift_mobile/theme/app_theme.dart';
-import 'package:farmshift_mobile/screens/home_screen.dart';
-import 'package:farmshift_mobile/screens/register_screen.dart';
 import 'package:farmshift_mobile/services/auth_service.dart';
+import 'package:farmshift_mobile/screens/home_screen.dart';
 
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+class RegisterScreen extends StatefulWidget {
+  const RegisterScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  State<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
+  final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
+  
   bool _obscurePassword = true;
+  bool _obscureConfirmPassword = true;
   String? _errorMessage;
+  String _selectedRole = 'employee';
 
-  void _handleLogin() async {
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    super.dispose();
+  }
+
+  void _handleRegister() async {
     if (_formKey.currentState!.validate()) {
+      // Check if passwords match
+      if (_passwordController.text != _confirmPasswordController.text) {
+        setState(() {
+          _errorMessage = 'Passwords do not match.';
+        });
+        return;
+      }
+
       setState(() {
         _errorMessage = null;
       });
 
       final authService = Provider.of<AuthService>(context, listen: false);
-      final result = await authService.login(
+      final result = await authService.register(
+        name: _nameController.text.trim(),
         email: _emailController.text.trim(),
         password: _passwordController.text,
+        role: _selectedRole,
       );
 
       if (result.isSuccess && mounted) {
@@ -41,31 +63,19 @@ class _LoginScreenState extends State<LoginScreen> {
         );
       } else if (mounted) {
         setState(() {
-          _errorMessage = result.error ?? 'Login failed. Please try again.';
+          _errorMessage = result.error ?? 'Registration failed. Please try again.';
         });
       }
     }
-  }
-  
-  void _navigateToRegister() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const RegisterScreen(),
-      ),
-    );
-  }
-
-  @override
-  void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
-    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('Create Account'),
+        elevation: 0,
+      ),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -92,7 +102,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 
                 // App title
                 Text(
-                  'FarmShift',
+                  'Join FarmShift',
                   style: Theme.of(context).textTheme.displayLarge,
                   textAlign: TextAlign.center,
                 ),
@@ -101,21 +111,42 @@ class _LoginScreenState extends State<LoginScreen> {
                 
                 // App subtitle
                 Text(
-                  'Employee Schedule App',
+                  'Create your account to access the app',
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                     color: AppTheme.textMediumColor,
                   ),
                   textAlign: TextAlign.center,
                 ),
                 
-                const SizedBox(height: 48),
+                const SizedBox(height: 32),
                 
-                // Login form
+                // Registration form
                 Form(
                   key: _formKey,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
+                      // Name field
+                      TextFormField(
+                        controller: _nameController,
+                        decoration: const InputDecoration(
+                          labelText: 'Full Name',
+                          hintText: 'Enter your full name',
+                          prefixIcon: Icon(Icons.person_outline),
+                        ),
+                        textCapitalization: TextCapitalization.words,
+                        textInputAction: TextInputAction.next,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter your name';
+                          }
+                          return null;
+                        },
+                      ),
+                      
+                      const SizedBox(height: 16),
+                      
+                      // Email field
                       TextFormField(
                         controller: _emailController,
                         decoration: const InputDecoration(
@@ -139,11 +170,12 @@ class _LoginScreenState extends State<LoginScreen> {
                       
                       const SizedBox(height: 16),
                       
+                      // Password field
                       TextFormField(
                         controller: _passwordController,
                         decoration: InputDecoration(
                           labelText: 'Password',
-                          hintText: 'Enter your password',
+                          hintText: 'Create a password',
                           prefixIcon: const Icon(Icons.lock_outline),
                           suffixIcon: IconButton(
                             icon: Icon(
@@ -159,14 +191,76 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                         obscureText: _obscurePassword,
-                        textInputAction: TextInputAction.done,
+                        textInputAction: TextInputAction.next,
                         validator: (value) {
                           if (value == null || value.isEmpty) {
-                            return 'Please enter your password';
+                            return 'Please enter a password';
+                          }
+                          if (value.length < 6) {
+                            return 'Password must be at least 6 characters';
                           }
                           return null;
                         },
-                        onFieldSubmitted: (_) => _handleLogin(),
+                      ),
+                      
+                      const SizedBox(height: 16),
+                      
+                      // Confirm password field
+                      TextFormField(
+                        controller: _confirmPasswordController,
+                        decoration: InputDecoration(
+                          labelText: 'Confirm Password',
+                          hintText: 'Confirm your password',
+                          prefixIcon: const Icon(Icons.lock_outline),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _obscureConfirmPassword 
+                                ? Icons.visibility_outlined
+                                : Icons.visibility_off_outlined,
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                _obscureConfirmPassword = !_obscureConfirmPassword;
+                              });
+                            },
+                          ),
+                        ),
+                        obscureText: _obscureConfirmPassword,
+                        textInputAction: TextInputAction.done,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please confirm your password';
+                          }
+                          return null;
+                        },
+                      ),
+                      
+                      const SizedBox(height: 16),
+                      
+                      // Role selection dropdown
+                      DropdownButtonFormField<String>(
+                        value: _selectedRole,
+                        decoration: const InputDecoration(
+                          labelText: 'Role',
+                          prefixIcon: Icon(Icons.work_outline),
+                        ),
+                        items: const [
+                          DropdownMenuItem(
+                            value: 'employee',
+                            child: Text('Employee'),
+                          ),
+                          DropdownMenuItem(
+                            value: 'manager',
+                            child: Text('Manager'),
+                          ),
+                        ],
+                        onChanged: (value) {
+                          if (value != null) {
+                            setState(() {
+                              _selectedRole = value;
+                            });
+                          }
+                        },
                       ),
                       
                       if (_errorMessage != null) ...[
@@ -186,7 +280,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       Consumer<AuthService>(
                         builder: (context, authService, _) {
                           return ElevatedButton(
-                            onPressed: authService.isLoading ? null : _handleLogin,
+                            onPressed: authService.isLoading ? null : _handleRegister,
                             child: authService.isLoading
                                 ? const SizedBox(
                                     height: 20,
@@ -196,26 +290,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                       color: Colors.white,
                                     ),
                                   )
-                                : const Text('Login'),
+                                : const Text('Create Account'),
                           );
                         },
-                      ),
-                      
-                      const SizedBox(height: 16),
-                      
-                      // Register link
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            'Don\'t have an account?',
-                            style: Theme.of(context).textTheme.bodySmall,
-                          ),
-                          TextButton(
-                            onPressed: _navigateToRegister,
-                            child: const Text('Sign up'),
-                          ),
-                        ],
                       ),
                     ],
                   ),

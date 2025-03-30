@@ -47,13 +47,14 @@ defmodule FarmshiftBackendWeb.Endpoint do
   plug Plug.MethodOverride
   plug Plug.Head
   plug Plug.Session, @session_options
-  
-  # CORS plug directly in endpoint
+
+  # Configure CORS to allow all origins during development
   plug CORSPlug,
-    origin: ["http://localhost:3000", "http://localhost:5173", "http://127.0.0.1:3000", "http://127.0.0.1:5173"],
+    origin: ~r/^http:\/\/localhost(:\d+)?$/,
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     headers: ["Authorization", "Content-Type", "Accept", "Origin"]
-    
+
+  # Add the plug that configures the endpoint for the router
   plug FarmshiftBackendWeb.Router
 end

@@ -29,14 +29,20 @@ defmodule FarmshiftBackend.Accounts do
 
   ## Examples
 
-      iex> get_user!(123)
+      iex> get_user!("uuid-here")
       %User{}
 
-      iex> get_user!(456)
+      iex> get_user!("non-existent-uuid")
       ** (Ecto.NoResultsError)
 
   """
-  def get_user!(id), do: Repo.get!(User, id)
+  def get_user!(id) do
+    # Validate that the ID is a valid UUID format
+    case Ecto.UUID.cast(id) do
+      {:ok, uuid} -> Repo.get!(User, uuid)
+      :error -> raise Ecto.NoResultsError, queryable: User, id: id
+    end
+  end
 
   @doc """
   Gets a single user by email.
@@ -143,31 +149,23 @@ defmodule FarmshiftBackend.Accounts do
   end
 
   @doc """
-  Authenticates a user by email and password.
+  Authenticate a user by email and password.
 
   ## Examples
 
-      iex> authenticate_user("user@example.com", "correct_password")
+      iex> authenticate_user("user@example.com", "password123")
       {:ok, %User{}}
 
       iex> authenticate_user("user@example.com", "wrong_password")
       {:error, :invalid_credentials}
-
-      iex> authenticate_user("unknown@example.com", "any_password")
-      {:error, :invalid_credentials}
-
   """
-  def authenticate_user(email, password) when is_binary(email) and is_binary(password) do
+  def authenticate_user(email, password) do
     user = get_user_by_email(email)
-    
+
     cond do
       user && Bcrypt.verify_pass(password, user.password_hash) ->
         {:ok, user}
-      user ->
-        {:error, :invalid_credentials}
       true ->
-        # Prevent timing attacks by simulating password hash verification
-        Bcrypt.no_user_verify()
         {:error, :invalid_credentials}
     end
   end

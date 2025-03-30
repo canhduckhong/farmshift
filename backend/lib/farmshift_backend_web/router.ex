@@ -4,7 +4,7 @@ defmodule FarmshiftBackendWeb.Router do
   # Apply CORS before any other pipeline
   pipeline :cors do
     plug Corsica,
-      origins: ["http://localhost:3000", "http://localhost:5173", "http://127.0.0.1:3000", "http://127.0.0.1:5173"], 
+      origins: ["*"], # Allow all origins during development
       allow_headers: ["content-type", "accept", "authorization", "origin"],
       allow_credentials: true,
       max_age: 600
@@ -28,10 +28,21 @@ defmodule FarmshiftBackendWeb.Router do
     plug Guardian.Plug.EnsureAuthenticated
   end
 
+  # Pipeline for mobile API
+  pipeline :mobile_api do
+    plug :accepts, ["json"]
+  end
+
   # Handle OPTIONS preflight requests for all routes
   scope "/api" do
     pipe_through [:cors]
     options "/*path", FarmshiftBackendWeb.AuthController, :options
+  end
+  
+  # Handle OPTIONS preflight requests for mobile routes
+  scope "/api/mobile" do
+    pipe_through [:cors]
+    options "/*path", FarmshiftBackendWeb.Mobile.AuthController, :options
   end
 
   # Public routes that don't require authentication
@@ -48,6 +59,23 @@ defmodule FarmshiftBackendWeb.Router do
     
     get "/current_user", AuthController, :current_user
     post "/logout", AuthController, :logout
+  end
+  
+  # Mobile API routes - Public routes that don't require authentication
+  scope "/api/mobile", FarmshiftBackendWeb.Mobile do
+    pipe_through [:cors, :mobile_api, :auth]
+    
+    post "/register", AuthController, :register
+    post "/login", AuthController, :login
+  end
+  
+  # Mobile API routes - Protected routes that require authentication
+  scope "/api/mobile", FarmshiftBackendWeb.Mobile do
+    pipe_through [:cors, :mobile_api, :auth, :ensure_auth]
+    
+    get "/current_user", AuthController, :current_user
+    post "/logout", AuthController, :logout
+    post "/refresh_token", AuthController, :refresh_token
   end
 
   # Enable LiveDashboard in development
