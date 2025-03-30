@@ -19,7 +19,6 @@ const SchedulePage: React.FC = () => {
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold text-gray-800">{t('common.weeklySchedule')}</h1>
         <div className="flex items-center space-x-4">
-          <LanguageSelector />
           <div className="text-sm text-gray-500">
             {new Date().toLocaleDateString(undefined, { 
               weekday: 'long', 
