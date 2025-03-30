@@ -15,10 +15,12 @@ const SchedulePage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-gray-800">{t('common.weeklySchedule')}</h1>
-        <div className="flex items-center space-x-4">
-          <div className="text-sm text-gray-500">
+      <div className="flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0">
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-800 w-full text-center sm:text-left">
+          {t('common.weeklySchedule')}
+        </h1>
+        <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-4 w-full justify-center sm:justify-end">
+          <div className="text-xs sm:text-sm text-gray-500 text-center sm:text-right">
             {new Date().toLocaleDateString(undefined, { 
               weekday: 'long', 
               year: 'numeric', 
@@ -32,7 +34,7 @@ const SchedulePage: React.FC = () => {
       <AIScheduler />
       
       {showSuggestions && aiSuggestions && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 overflow-x-auto">
           <h2 className="text-lg font-semibold text-blue-800 mb-2">{t('aiScheduler.scheduleGenerated')}</h2>
           <p className="text-sm text-blue-700 mb-4">
             {t('aiScheduler.reviewSuggestions')}
@@ -41,7 +43,9 @@ const SchedulePage: React.FC = () => {
         </div>
       )}
       
-      {(!showSuggestions || !aiSuggestions) && <WeeklyCalendar useAiSuggestions={false} />}
+      <div className="overflow-x-auto">
+        {(!showSuggestions || !aiSuggestions) && <WeeklyCalendar useAiSuggestions={false} />}
+      </div>
       
       {isModalOpen && <AssignShiftModal />}
     </div>

@@ -126,16 +126,21 @@ const WeeklyCalendar: React.FC<WeeklyCalendarProps> = ({ useAiSuggestions = fals
       <div className="grid grid-cols-8 border-b">
         <div className="p-3 font-medium text-gray-500 border-r">{t('common.timeSlot')}</div>
         {days.map((day) => (
-          <div key={day} className="p-3 font-medium text-center text-gray-800 border-r">
-            {t(`days.${day.toLowerCase()}`)}
+          <div 
+            key={day} 
+            className="p-2 sm:p-3 font-medium text-center text-gray-800 border-r text-xs sm:text-sm truncate"
+          >
+            <span className="hidden sm:inline">{t(`days.${day.toLowerCase()}`)}</span>
+            <span className="sm:hidden">{t(`days.${day.toLowerCase()}`).charAt(0)}</span>
           </div>
         ))}
       </div>
       
       {timeSlots.map((timeSlot) => (
         <div key={timeSlot} className="grid grid-cols-8 border-b">
-          <div className="p-3 font-medium text-gray-500 border-r flex items-center">
-            {t(`timeSlots.${timeSlot.toLowerCase()}`)}
+          <div className="p-2 sm:p-3 font-medium text-gray-500 border-r flex items-center text-xs sm:text-sm">
+            <span className="hidden sm:inline">{t(`timeSlots.${timeSlot.toLowerCase()}`)}</span>
+            <span className="sm:hidden">{t(`timeSlots.${timeSlot.toLowerCase()}`).split('-')[0]}</span>
           </div>
           
           {days.map((day) => {
