@@ -18,19 +18,8 @@ defmodule FarmshiftBackend.Employees do
       [%Employee{}, ...]
 
   """
-  def list_employees(params \\ %{}) do
-    Employee
-    |> filter_employees(params)
-    |> Repo.all()
-  end
-
-  defp filter_employees(query, params) do
-    Enum.reduce(params, query, fn
-      {:role, role}, q -> where(q, [e], e.role == ^role)
-      {:employment_type, type}, q -> where(q, [e], e.employment_type == ^type)
-      {:skills, skills}, q -> where(q, [e], fragment("? && ?", e.skills, ^skills))
-      _, q -> q
-    end)
+  def list_employees do
+    Repo.all(Employee)
   end
 
   @doc """

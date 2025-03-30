@@ -12,8 +12,6 @@ defmodule FarmshiftBackendWeb.Router do
 
   pipeline :api do
     plug :accepts, ["json"]
-    plug :fetch_session
-    plug :protect_from_forgery
   end
   
   pipeline :auth do
@@ -49,25 +47,36 @@ defmodule FarmshiftBackendWeb.Router do
 
   # Public routes that don't require authentication
   scope "/api", FarmshiftBackendWeb do
-    pipe_through [:api, :cors]
-
-    # Authentication routes
+    pipe_through [:cors, :api, :auth]
+    
     post "/register", AuthController, :register
     post "/login", AuthController, :login
-    post "/refresh", AuthController, :refresh
-
-    # Shift routes
-    resources "/shifts", ShiftController, except: [:new, :edit]
-    
-    # Employee routes
-    resources "/employees", EmployeeController, except: [:new, :edit]
+    resources "/employees", EmployeesController, except: [:new, :edit]
   end
   
   # Protected routes that require authentication
   scope "/api", FarmshiftBackendWeb do
-    pipe_through [:api, :cors, :auth, :ensure_auth]
-
-    # Add any routes that require additional authentication here
+    pipe_through [:cors, :api, :auth, :ensure_auth]
+    
+    get "/current_user", AuthController, :current_user
+    post "/logout", AuthController, :logout
+  end
+  
+  # Mobile API routes - Public routes that don't require authentication
+  scope "/api/mobile", FarmshiftBackendWeb.Mobile do
+    pipe_through [:cors, :mobile_api, :auth]
+    
+    post "/register", AuthController, :register
+    post "/login", AuthController, :login
+  end
+  
+  # Mobile API routes - Protected routes that require authentication
+  scope "/api/mobile", FarmshiftBackendWeb.Mobile do
+    pipe_through [:cors, :mobile_api, :auth, :ensure_auth]
+    
+    get "/current_user", AuthController, :current_user
+    post "/logout", AuthController, :logout
+    post "/refresh_token", AuthController, :refresh_token
   end
 
   # Enable LiveDashboard in development
