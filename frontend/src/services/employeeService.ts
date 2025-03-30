@@ -6,6 +6,25 @@ const API_URL = process.env.REACT_APP_API_URL
   ? `${process.env.REACT_APP_API_URL}/api` 
   : 'http://localhost:4000/api';
 
+// Utility function to convert camelCase to snake_case
+const camelToSnakeCase = (obj: any): any => {
+  if (obj === null || typeof obj !== 'object') return obj;
+  
+  if (Array.isArray(obj)) {
+    return obj.map(camelToSnakeCase);
+  }
+  
+  const newObj: any = {};
+  for (const key in obj) {
+    if (Object.prototype.hasOwnProperty.call(obj, key)) {
+      const snakeKey = key.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
+      newObj[snakeKey] = camelToSnakeCase(obj[key]);
+    }
+  }
+  
+  return newObj;
+};
+
 export const employeeService = {
   async fetchEmployees(): Promise<Employee[]> {
     const token = getAuthToken();
@@ -27,8 +46,11 @@ export const employeeService = {
       throw new Error('No authentication token');
     }
 
+    // Convert keys to snake_case for backend
+    const snakeCaseData = camelToSnakeCase({ employee: employeeData });
+
     const response = await axios.post(`${API_URL}/employees`, 
-      { employee: employeeData }, 
+      snakeCaseData, 
       { headers: { 
         'Authorization': `Bearer ${token}` 
       }
@@ -43,8 +65,11 @@ export const employeeService = {
     }
 
     const { id, ...updateData } = employee;
+    // Convert keys to snake_case for backend
+    const snakeCaseData = camelToSnakeCase({ employee: updateData });
+
     const response = await axios.put(`${API_URL}/employees/${id}`, 
-      { employee: updateData }, 
+      snakeCaseData, 
       { headers: { 
         'Authorization': `Bearer ${token}` 
       }

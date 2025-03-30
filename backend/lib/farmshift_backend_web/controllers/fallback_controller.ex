@@ -43,16 +43,3 @@ defmodule FarmshiftBackendWeb.ChangesetJSON do
     end)
   end
 end
-
-defmodule FarmshiftBackendWeb.ErrorJSON do
-  @doc """
-  Renders standard error responses.
-  """
-  def not_found(_) do
-    %{error: "Not Found"}
-  end
-
-  def unauthorized(_) do
-    %{error: "Unauthorized"}
-  end
-end
