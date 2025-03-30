@@ -1,26 +1,39 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useTranslation } from 'react-i18next';
-import { RootState } from '../store';
+import { AppDispatch } from '../store';
 import { 
+  fetchEmployees, 
   deleteEmployee, 
-  selectEmployee, 
-  openNewEmployeeModal 
-} from '../store/shiftsSlice';
+  openEmployeeModal 
+} from '../store/employeesSlice';
+import { Employee } from '../store/shiftsSlice';
 import EmployeeModal from '../components/EmployeeModal';
 import LanguageSelector from '../components/LanguageSelector';
+import { RootState } from '../types';
 
 const EmployeesPage: React.FC = () => {
   const { t } = useTranslation();
-  const dispatch = useDispatch();
-  const { employees, isEmployeeModalOpen } = useSelector((state: RootState) => state.shifts);
+  const dispatch = useDispatch<AppDispatch>();
+  const { 
+    employees, 
+    isModalOpen, 
+    status, 
+    error 
+  } = useSelector((state: RootState) => state.employees);
+
+  useEffect(() => {
+    if (status === 'idle') {
+      dispatch(fetchEmployees());
+    }
+  }, [status, dispatch]);
 
   const handleAddEmployee = () => {
-    dispatch(openNewEmployeeModal());
+    dispatch(openEmployeeModal(null));
   };
 
-  const handleEditEmployee = (id: string) => {
-    dispatch(selectEmployee(id));
+  const handleEditEmployee = (employee: Employee) => {
+    dispatch(openEmployeeModal(employee));
   };
 
   const handleDeleteEmployee = (id: string) => {
@@ -28,6 +41,19 @@ const EmployeesPage: React.FC = () => {
       dispatch(deleteEmployee(id));
     }
   };
+
+  // Loading and error states
+  if (status === 'loading') {
+    return <div className="text-center py-10">{t('common.loading')}</div>;
+  }
+
+  if (status === 'failed') {
+    return (
+      <div className="text-center py-10 text-red-600">
+        {t('common.error')}: {error}
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto p-4">
@@ -43,6 +69,9 @@ const EmployeesPage: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {/* Employee Modal */}
+      {isModalOpen && <EmployeeModal />}
 
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <table className="min-w-full divide-y divide-gray-200">
@@ -66,7 +95,7 @@ const EmployeesPage: React.FC = () => {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {employees.map((employee) => (
+            {employees.map((employee: Employee) => (
               <tr key={employee.id} className="hover:bg-gray-50">
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                   {employee.name}
@@ -75,33 +104,24 @@ const EmployeesPage: React.FC = () => {
                   {employee.role}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {t(`employees.types.${employee.employmentType}`)}
+                  {employee.employmentType}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  <div className="flex flex-wrap gap-1">
-                    {employee.skills.map((skill, index) => (
-                      <span 
-                        key={index} 
-                        className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100 text-primary-800"
-                      >
-                        {skill}
-                      </span>
-                    ))}
-                  </div>
+                  {employee.skills.join(', ')}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <div className="flex justify-end space-x-2">
                     <button
-                      onClick={() => handleEditEmployee(employee.id)}
-                      className="text-indigo-600 hover:text-indigo-900"
+                      onClick={() => handleEditEmployee(employee)}
+                      className="text-primary-600 hover:text-primary-900 transition-colors"
                     >
-                      {t('employees.edit')}
+                      {t('common.edit')}
                     </button>
                     <button
                       onClick={() => handleDeleteEmployee(employee.id)}
-                      className="text-red-600 hover:text-red-900"
+                      className="text-red-600 hover:text-red-900 transition-colors"
                     >
-                      {t('employees.delete')}
+                      {t('common.delete')}
                     </button>
                   </div>
                 </td>
@@ -110,8 +130,6 @@ const EmployeesPage: React.FC = () => {
           </tbody>
         </table>
       </div>
-
-      {isEmployeeModalOpen && <EmployeeModal />}
     </div>
   );
 };

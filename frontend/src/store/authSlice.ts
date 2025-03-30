@@ -2,7 +2,7 @@ import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import authService, { User, LoginCredentials, RegisterData } from '../services/authService';
 
 // Define auth state interface
-interface AuthState {
+export interface AuthState {
   user: User | null;
   isAuthenticated: boolean;
   loading: boolean;
