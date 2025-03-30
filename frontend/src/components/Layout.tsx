@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useSelector, useDispatch } from 'react-redux';
@@ -12,6 +12,10 @@ const Layout: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
   
+  // State and ref for dropdown
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  
   // Get user information from the auth state
   const { user } = useSelector((state: RootState) => state.auth);
   
@@ -19,6 +23,23 @@ const Layout: React.FC = () => {
     dispatch(logout());
     navigate('/login');
   };
+
+  // Effect to handle clicks outside of dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    // Add event listener
+    document.addEventListener('mousedown', handleClickOutside);
+    
+    // Cleanup
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
   
   return (
     <div className="min-h-screen flex flex-col">
@@ -46,8 +67,14 @@ const Layout: React.FC = () => {
               <LanguageSelector />
               
               {/* User info and logout */}
-              <div className="relative group">
-                <button className="flex items-center space-x-1 focus:outline-none">
+              <div 
+                ref={dropdownRef}
+                className="relative"
+              >
+                <button 
+                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                  className="flex items-center space-x-1 focus:outline-none"
+                >
                   <span className="text-sm font-medium">{user?.name}</span>
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
@@ -55,20 +82,24 @@ const Layout: React.FC = () => {
                 </button>
                 
                 {/* Dropdown menu */}
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10 hidden group-hover:block">
-                  <div className="px-4 py-2 text-sm text-gray-700 border-b">
-                    <div className="font-medium">{user?.name}</div>
-                    <div className="text-gray-500">{user?.email}</div>
-                    <div className="text-xs text-primary-600 mt-1">{user?.role}</div>
-                  </div>
-                  
-                  <button
-                    onClick={handleLogout}
-                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                {isDropdownOpen && (
+                  <div 
+                    className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10"
                   >
-                    {t('auth.logout')}
-                  </button>
-                </div>
+                    <div className="px-4 py-2 text-sm text-gray-700 border-b">
+                      <div className="font-medium">{user?.name}</div>
+                      <div className="text-gray-500">{user?.email}</div>
+                      <div className="text-xs text-primary-600 mt-1">{user?.role}</div>
+                    </div>
+                    
+                    <button
+                      onClick={handleLogout}
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      {t('auth.logout')}
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -81,7 +112,7 @@ const Layout: React.FC = () => {
       
       <footer className="bg-gray-100 border-t">
         <div className="container mx-auto px-4 py-4 text-center text-gray-600">
-          <p>© {new Date().getFullYear()} FarmShift - Simple Scheduling for Danish Livestock Farms</p>
+          <p> {new Date().getFullYear()} FarmShift - Simple Scheduling for Danish Livestock Farms</p>
         </div>
       </footer>
     </div>

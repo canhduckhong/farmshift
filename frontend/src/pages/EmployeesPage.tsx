@@ -9,7 +9,6 @@ import {
 } from '../store/employeesSlice';
 import { Employee } from '../store/shiftsSlice';
 import EmployeeModal from '../components/EmployeeModal';
-import LanguageSelector from '../components/LanguageSelector';
 import { RootState } from '../types';
 
 const EmployeesPage: React.FC = () => {
@@ -60,7 +59,6 @@ const EmployeesPage: React.FC = () => {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-800">{t('employees.title')}</h1>
         <div className="flex space-x-4">
-          <LanguageSelector />
           <button
             onClick={handleAddEmployee}
             className="bg-primary-600 text-white px-4 py-2 rounded-md hover:bg-primary-700 transition-colors"
