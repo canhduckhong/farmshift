@@ -5,7 +5,6 @@ import { RootState } from '../store';
 import WeeklyCalendar from '../components/WeeklyCalendar';
 import AssignShiftModal from '../components/AssignShiftModal';
 import AIScheduler from '../components/AIScheduler';
-import LanguageSelector from '../components/LanguageSelector';
 
 const SchedulePage: React.FC = () => {
   const { t } = useTranslation();
