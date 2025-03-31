@@ -76,7 +76,6 @@ const Layout: React.FC = () => {
             </nav>
             
             <div className="flex items-center space-x-4">
-              <LanguageSelector />
               
               {/* User info and logout */}
               <div 
@@ -113,6 +112,7 @@ const Layout: React.FC = () => {
                   </div>
                 )}
               </div>
+              <LanguageSelector />
             </div>
           </div>
         </div>
