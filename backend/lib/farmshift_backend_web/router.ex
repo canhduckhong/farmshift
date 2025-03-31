@@ -22,6 +22,8 @@ defmodule FarmshiftBackendWeb.Router do
       error_handler: FarmshiftBackendWeb.AuthErrorHandler
     plug Guardian.Plug.VerifyHeader, scheme: "Bearer"
     plug Guardian.Plug.LoadResource, allow_blank: true
+    # Add CurrentUserPlug to assign current_user
+    plug FarmshiftBackendWeb.Plugs.CurrentUserPlug
   end
   
   pipeline :ensure_auth do

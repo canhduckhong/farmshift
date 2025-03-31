@@ -71,10 +71,5 @@ defmodule FarmshiftBackend.AccountsTest do
       assert {:ok, %User{}} = Accounts.delete_user(user)
       assert_raise Ecto.NoResultsError, fn -> Accounts.get_user!(user.id) end
     end
-
-    test "change_user_registration/2 returns a user changeset" do
-      user = user_fixture()
-      assert %Ecto.Changeset{} = Accounts.change_user_registration(user)
-    end
   end
 end

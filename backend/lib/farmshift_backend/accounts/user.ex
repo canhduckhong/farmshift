@@ -9,7 +9,7 @@ defmodule FarmshiftBackend.Accounts.User do
     field :password_hash, :string
     field :name, :string
     field :role, :string, default: "employee"
-    field :language, :string
+    field :language, :string, default: "en"
 
     # Temporary fields for registration
     field :password, :string, virtual: true
