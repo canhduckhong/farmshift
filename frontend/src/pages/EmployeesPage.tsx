@@ -6,7 +6,6 @@ import {
   fetchEmployees, 
   openEmployeeModal, 
   selectEmployees,
-  deleteEmployee
 } from '../store/employeesSlice';
 import { Employee } from '../store/shiftsSlice';
 import EmployeeModal from '../components/EmployeeModal';

@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import { RootState } from '../store';
 import { deleteEmployee } from '../store/employeesSlice';
+import { AppDispatch } from '../store';
 
 interface DeleteEmployeeModalProps {
   isOpen: boolean;
@@ -16,15 +17,25 @@ const DeleteEmployeeModal: React.FC<DeleteEmployeeModalProps> = ({
   employeeId 
 }) => {
   const { t } = useTranslation();
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const selectedEmployee = useSelector((state: RootState) => 
     state.employees.employees.find(emp => emp.id === employeeId)
   );
 
   const handleDelete = async () => {
     if (employeeId) {
-      await dispatch(deleteEmployee(employeeId));
-      onClose();
+      try {
+        const result = await dispatch(deleteEmployee(employeeId));
+        if (deleteEmployee.fulfilled.match(result)) {
+          onClose();
+        }
+      } catch (error: unknown) {
+        if (error instanceof Error) {
+          console.error('Failed to delete employee', error.message);
+        } else {
+          console.error('An unknown error occurred while deleting employee');
+        }
+      }
     }
   };
 
