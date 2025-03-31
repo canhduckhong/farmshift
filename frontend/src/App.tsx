@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import Layout from './components/Layout';
 import PrivateRoute from './components/PrivateRoute';
@@ -13,7 +13,9 @@ import authService from './services/authService';
 
 const App: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
-  
+  const location = useLocation();
+  const navigate = useNavigate();
+
   useEffect(() => {
     // Initialize auth token if it exists in local storage
     authService.loadToken();
@@ -21,6 +23,25 @@ const App: React.FC = () => {
     // Try to load the user data if token exists
     dispatch(loadUser());
   }, [dispatch]);
+
+  useEffect(() => {
+    // Persist last visited page in session storage
+    const validRoutes = ['/schedule', '/employees'];
+    
+    if (validRoutes.includes(location.pathname)) {
+      sessionStorage.setItem('lastVisitedPage', location.pathname);
+    }
+  }, [location]);
+
+  // Check for last visited page on initial load
+  useEffect(() => {
+    const lastVisitedPage = sessionStorage.getItem('lastVisitedPage');
+    const validRoutes = ['/schedule', '/employees'];
+
+    if (lastVisitedPage && validRoutes.includes(lastVisitedPage)) {
+      navigate(lastVisitedPage, { replace: true });
+    }
+  }, [navigate]);
   
   return (
     <Routes>
