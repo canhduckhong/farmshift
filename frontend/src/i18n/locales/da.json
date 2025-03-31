@@ -1,6 +1,6 @@
 {
   "common": {
-    "weeklySchedule": "Ugentlig Vagtplan",
+    "weeklySchedule": "Ugentlig tidsplan",
     "add": "Tilføj",
     "timeSlot": "Tidspunkt",
     "generate": "Generer AI Vagtplan",
@@ -11,7 +11,8 @@
     "save": "Gem",
     "loading": "Indlæser...",
     "error": "Fejl",
-    "success": "Succes"
+    "success": "Succes",
+    "weekFormat": "Uge {{week}}: {{startDate}} - {{endDate}}"
   },
   "navigation": {
     "schedule": "Vagtplan",

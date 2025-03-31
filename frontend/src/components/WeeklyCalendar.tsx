@@ -6,11 +6,17 @@ import { Shift, selectShift, clearShift, moveEmployeeBetweenShifts } from '../st
 
 interface WeeklyCalendarProps {
   useAiSuggestions?: boolean;
+  weekOffset?: number;
 }
 
-const WeeklyCalendar: React.FC<WeeklyCalendarProps> = ({ useAiSuggestions = false }) => {
+const WeeklyCalendar: React.FC<WeeklyCalendarProps> = ({ 
+  useAiSuggestions = false, 
+  weekOffset = 0 
+}) => {
   const { t } = useTranslation();
   const dispatch = useDispatch();
+  
+  // Get shifts based on AI suggestions or regular shifts
   const shifts = useSelector((state: RootState) => 
     useAiSuggestions ? state.shifts.aiSuggestions || [] : state.shifts.shifts
   );
@@ -24,6 +30,21 @@ const WeeklyCalendar: React.FC<WeeklyCalendarProps> = ({ useAiSuggestions = fals
   // Get unique days and time slots
   const days = Array.from(new Set(shifts.map((shift: Shift) => shift.day))) as string[];
   const timeSlots = Array.from(new Set(shifts.map((shift: Shift) => shift.timeSlot))) as string[];
+  
+  // Helper function to adjust days based on week offset
+  const adjustDaysForOffset = (originalDays: string[]) => {
+    const today = new Date();
+    const dayOfWeek = today.getDay();
+    const diff = today.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
+    const startOfWeek = new Date(today);
+    startOfWeek.setDate(diff + (weekOffset * 7));
+
+    // Create a mapping of original days to adjusted days
+    const dayOrder = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    return dayOrder.slice(0, originalDays.length);
+  };
+
+  const adjustedDays = adjustDaysForOffset(days);
   
   const handleShiftClick = (shift: Shift) => {
     dispatch(selectShift(shift));
@@ -125,7 +146,7 @@ const WeeklyCalendar: React.FC<WeeklyCalendarProps> = ({ useAiSuggestions = fals
       </div>
       <div className="grid grid-cols-8 border-b">
         <div className="p-3 font-medium text-gray-500 border-r">{t('common.timeSlot')}</div>
-        {days.map((day) => (
+        {adjustedDays.map((day) => (
           <div 
             key={day} 
             className="p-2 sm:p-3 font-medium text-center text-gray-800 border-r text-xs sm:text-sm truncate"
@@ -143,7 +164,7 @@ const WeeklyCalendar: React.FC<WeeklyCalendarProps> = ({ useAiSuggestions = fals
             <span className="sm:hidden">{t(`timeSlots.${timeSlot.toLowerCase()}`).split('-')[0]}</span>
           </div>
           
-          {days.map((day) => {
+          {adjustedDays.map((day) => {
             const shift = shifts.find((s: Shift) => s.day === day && s.timeSlot === timeSlot);
             const hasEmployee = shift?.employeeId !== null;
             
