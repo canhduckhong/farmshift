@@ -122,9 +122,9 @@ Distributed under the MIT License. See `LICENSE` for more information.
 
 ## 📞 Contact
 
-Chris Khong - [Your Email]
+Chris Khong - khongduccanh.315@gmail.com
 
-Project Link: [https://github.com/yourusername/farmshift](https://github.com/yourusername/farmshift)
+Project Link: [https://github.com/canhduckhong/farmshift](https://github.com/canhduckhong/farmshift)
 
 ---
 
