@@ -1,27 +1,33 @@
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import { AppDispatch } from '../store';
 import { 
   fetchEmployees, 
-  deleteEmployee, 
-  openEmployeeModal 
+  openEmployeeModal, 
+  selectEmployees,
+  deleteEmployee
 } from '../store/employeesSlice';
 import { Employee } from '../store/shiftsSlice';
 import EmployeeModal from '../components/EmployeeModal';
 import CreateEmployeeModal from '../components/CreateEmployeeModal';
+import DeleteEmployeeModal from '../components/DeleteEmployeeModal';
 import { RootState } from '../types';
 
 const EmployeesPage: React.FC = () => {
   const { t } = useTranslation();
   const dispatch = useDispatch<AppDispatch>();
+  const employees = useSelector(selectEmployees);
   const { 
-    employees, 
     isModalOpen, 
     selectedEmployee,
     status, 
     error 
   } = useSelector((state: RootState) => state.employees);
+
+  // State for delete confirmation modal
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [employeeToDelete, setEmployeeToDelete] = useState<string | null>(null);
 
   useEffect(() => {
     if (status === 'idle') {
@@ -37,10 +43,14 @@ const EmployeesPage: React.FC = () => {
     dispatch(openEmployeeModal(employee));
   };
 
-  const handleDeleteEmployee = (id: string) => {
-    if (window.confirm(t('employees.confirmDelete'))) {
-      dispatch(deleteEmployee(id));
-    }
+  const handleDeleteEmployee = (employeeId: string) => {
+    setEmployeeToDelete(employeeId);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleCloseDeleteModal = () => {
+    setIsDeleteModalOpen(false);
+    setEmployeeToDelete(null);
   };
 
   // Loading and error states
@@ -73,6 +83,12 @@ const EmployeesPage: React.FC = () => {
       {/* Employee Modals */}
       {isModalOpen && !selectedEmployee && <CreateEmployeeModal isOpen={true} />}
       {isModalOpen && selectedEmployee && <EmployeeModal />}
+
+      <DeleteEmployeeModal 
+        isOpen={isDeleteModalOpen}
+        onClose={handleCloseDeleteModal}
+        employeeId={employeeToDelete}
+      />
 
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <table className="min-w-full divide-y divide-gray-200">
