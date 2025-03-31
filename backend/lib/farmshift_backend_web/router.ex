@@ -20,7 +20,7 @@ defmodule FarmshiftBackendWeb.Router do
     plug Guardian.Plug.Pipeline,
       module: FarmshiftBackend.Auth.Guardian,
       error_handler: FarmshiftBackendWeb.AuthErrorHandler
-    plug Guardian.Plug.VerifyHeader, realm: "Bearer"
+    plug Guardian.Plug.VerifyHeader, scheme: "Bearer"
     plug Guardian.Plug.LoadResource, allow_blank: true
   end
   
