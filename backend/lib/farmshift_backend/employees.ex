@@ -127,7 +127,6 @@ defmodule FarmshiftBackend.Employees do
     Employee
     |> where([e], e.employment_type in ["fulltime", "parttime"])
     |> where([e], fragment("array_length(?, 1) > 0", e.skills))
-    |> where([e], is_nil(e.termination_date) or e.termination_date > fragment("CURRENT_DATE"))
     |> Repo.all()
     |> Enum.map(fn employee ->
       %{
@@ -137,8 +136,8 @@ defmodule FarmshiftBackend.Employees do
         employment_type: employee.employment_type,
         max_shifts_per_week: employee.max_shifts_per_week || 5,
         preferences: %{
-          preferred_days_off: employee.preferred_days_off || [],
-          preferred_shifts: employee.preferred_shifts || []
+          preferred_days_off: employee.preferences["preferred_days_off"] || [],
+          preferred_shifts: employee.preferences["preferred_shifts"] || []
         }
       }
     end)

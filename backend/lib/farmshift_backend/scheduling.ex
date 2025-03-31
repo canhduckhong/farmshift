@@ -14,33 +14,22 @@ defmodule FarmshiftBackend.Scheduling do
       # Prepare configuration rules
       enabled_rules = config["enabled_rules"] || []
 
-      # Attempt to assign shifts with multiple passes
-      schedule = assign_shifts_with_multiple_passes(initial_shifts, employees, enabled_rules)
+      # Handle empty shifts case
+      if is_nil(initial_shifts) or length(initial_shifts) == 0 do
+        {:error, "Shifts cannot be nil"}
+      else
+        # Generate schedule using a more flexible algorithm
+        schedule = generate_flexible_schedule(initial_shifts, employees, enabled_rules)
 
-      # Validate the generated schedule
-      case validate_schedule(schedule) do
-        :ok -> {:ok, schedule}
-        {:error, reason} -> 
-          Logger.error("Schedule generation failed: #{reason}")
-          {:error, reason}
+        # Validate the generated schedule
+        case validate_schedule(schedule) do
+          :ok -> {:ok, schedule}
+          {:error, reason} ->
+            Logger.error("Schedule generation failed: #{reason}")
+            {:error, reason}
+        end
       end
     end
-  end
-
-  @doc """
-  Check if an employee can be assigned to a specific shift.
-  """
-  def can_assign_employee_to_shift?(employee, day, time_slot, existing_shifts, enabled_rules) do
-    # Check each rule
-    Enum.all?(enabled_rules, fn rule ->
-      case rule["name"] do
-        "skillMatch" -> check_skill_match(employee, time_slot)
-        "noConsecutiveShifts" -> check_no_consecutive_shifts(employee, day, existing_shifts)
-        "maxShiftsPerWeek" -> check_max_shifts_per_week(employee, existing_shifts)
-        "preferredDaysOff" -> check_preferred_days_off(employee, day)
-        _ -> true
-      end
-    end)
   end
 
   # Validate input parameters
@@ -53,49 +42,63 @@ defmodule FarmshiftBackend.Scheduling do
     end
   end
 
-  # Multiple pass shift assignment strategy
-  defp assign_shifts_with_multiple_passes(initial_shifts, employees, enabled_rules) do
-    # First pass: Prioritize skill matching and preferences
-    schedule = Enum.map(initial_shifts, fn shift ->
-      assign_shift_to_best_employee(shift, employees, enabled_rules)
-    end)
+  # Generate schedule with a more flexible approach
+  defp generate_flexible_schedule(initial_shifts, employees, enabled_rules) do
+    # Shuffle employees to distribute shifts more evenly
+    shuffled_employees = Enum.shuffle(employees)
 
-    # Second pass: Fill remaining unassigned shifts with more relaxed rules
-    schedule
-    |> Enum.map(fn shift ->
-      if shift["employee_id"] == nil do
-        assign_shift_to_best_employee_relaxed(shift, employees, enabled_rules)
-      else
-        shift
-      end
+    # Attempt to assign shifts
+    Enum.map(initial_shifts, fn shift ->
+      # Try multiple times to assign the shift
+      Enum.reduce_while(1..3, shift, fn _, current_shift ->
+        result = assign_shift_flexibly(current_shift, shuffled_employees, enabled_rules)
+
+        # If the shift is assigned, halt the reduction
+        if Map.has_key?(result, "employee_id") do
+          {:halt, result}
+        else
+          # If not assigned, continue trying
+          {:cont, current_shift}
+        end
+      end)
     end)
-    # Third pass: Assign any remaining shifts to any available employee
-    |> Enum.map(fn shift ->
-      if shift["employee_id"] == nil do
-        assign_shift_to_any_employee(shift, employees)
-      else
-        shift
+  end
+
+  # Assign shift with a flexible strategy
+  defp assign_shift_flexibly(shift, employees, enabled_rules) do
+    # Try multiple strategies to assign the shift
+    strategies = [
+      &find_perfect_match/3,
+      &find_skill_match/3,
+      &find_any_employee/3
+    ]
+
+    Enum.reduce_while(strategies, shift, fn strategy, current_shift ->
+      case strategy.(current_shift, employees, enabled_rules) do
+        %{"employee_id" => _} = assigned_shift ->
+          {:halt, assigned_shift}
+        _ ->
+          {:cont, current_shift}
       end
     end)
   end
 
-  # Find the best employee for a specific shift with strict rules
-  defp assign_shift_to_best_employee(shift, employees, enabled_rules) do
-    # Find eligible employees
-    eligible_employees = Enum.filter(employees, fn employee ->
+  # Find a perfect match considering all rules
+  defp find_perfect_match(shift, employees, enabled_rules) do
+    # Find employees who satisfy all rules
+    perfect_matches = Enum.filter(employees, fn employee ->
       can_assign_employee_to_shift?(
-        employee, 
-        shift["day"], 
-        shift["time_slot"], 
-        [], 
+        employee,
+        shift["day"],
+        shift["time_slot"],
+        [],
         enabled_rules
       )
     end)
 
-    # Select an employee if available
-    case eligible_employees do
+    case perfect_matches do
       [] -> shift
-      candidates -> 
+      candidates ->
         selected_employee = Enum.random(candidates)
         Map.merge(shift, %{
           "employee_id" => selected_employee["id"],
@@ -104,26 +107,24 @@ defmodule FarmshiftBackend.Scheduling do
     end
   end
 
-  # Find the best employee for a specific shift with relaxed rules
-  defp assign_shift_to_best_employee_relaxed(shift, employees, enabled_rules) do
-    # Relaxed rules: only check skill match
-    relaxed_rules = Enum.filter(enabled_rules, & &1["name"] == "skillMatch")
+  # Find a match based on skill
+  defp find_skill_match(shift, employees, _enabled_rules) do
+    # Required skills based on time slot
+    required_skills = case shift["time_slot"] do
+      "Morning" -> ["Milking", "Feeding"]
+      "Afternoon" -> ["Cleaning", "Maintenance"]
+      "Evening" -> ["Security", "Feeding"]
+      _ -> []
+    end
 
-    # Find eligible employees
-    eligible_employees = Enum.filter(employees, fn employee ->
-      can_assign_employee_to_shift?(
-        employee, 
-        shift["day"], 
-        shift["time_slot"], 
-        [], 
-        relaxed_rules
-      )
+    # Find employees with matching skills
+    skill_matches = Enum.filter(employees, fn employee ->
+      Enum.any?(employee["skills"] || [], fn skill -> skill in required_skills end)
     end)
 
-    # Select an employee if available
-    case eligible_employees do
+    case skill_matches do
       [] -> shift
-      candidates -> 
+      candidates ->
         selected_employee = Enum.random(candidates)
         Map.merge(shift, %{
           "employee_id" => selected_employee["id"],
@@ -132,17 +133,33 @@ defmodule FarmshiftBackend.Scheduling do
     end
   end
 
-  # Assign shift to any available employee
-  defp assign_shift_to_any_employee(shift, employees) do
+  # Find any available employee
+  defp find_any_employee(shift, employees, _enabled_rules) do
     case employees do
       [] -> shift
-      candidates -> 
+      candidates ->
         selected_employee = Enum.random(candidates)
         Map.merge(shift, %{
           "employee_id" => selected_employee["id"],
           "role" => List.first(selected_employee["skills"] || [])
         })
     end
+  end
+
+  @doc """
+  Check if an employee can be assigned to a specific shift.
+  """
+  def can_assign_employee_to_shift?(employee, day, time_slot, existing_shifts, enabled_rules) do
+    # Validate each rule
+    Enum.all?(enabled_rules, fn rule ->
+      case rule["name"] do
+        "skillMatch" -> check_skill_match(employee, time_slot)
+        "noConsecutiveShifts" -> check_no_consecutive_shifts(employee, day, existing_shifts)
+        "maxShiftsPerWeek" -> check_max_shifts_per_week(employee, existing_shifts)
+        "preferredDaysOff" -> check_preferred_days_off(employee, day)
+        _ -> true
+      end
+    end)
   end
 
   # Skill matching validation
@@ -159,20 +176,22 @@ defmodule FarmshiftBackend.Scheduling do
 
   # Prevent consecutive shifts
   defp check_no_consecutive_shifts(employee, day, existing_shifts) do
-    existing_shifts_for_employee = Enum.filter(existing_shifts, 
+    existing_shifts_for_employee = Enum.filter(existing_shifts,
       &(&1["employee_id"] == employee["id"])
     )
-    
+
     !Enum.any?(existing_shifts_for_employee, &(&1["day"] == day))
   end
 
   # Limit maximum shifts per week
   defp check_max_shifts_per_week(employee, existing_shifts) do
     max_shifts = employee["max_shifts_per_week"] || 5
-    existing_employee_shifts = Enum.filter(existing_shifts, 
-      &(&1["employee_id"] == employee["id"])
-    )
-    
+
+    existing_employee_shifts = Enum.filter(existing_shifts, fn shift ->
+      shift["employee_id"] == employee["id"] and
+      shift["week_number"] == (List.first(existing_shifts)["week_number"] || 15)
+    end)
+
     length(existing_employee_shifts) < max_shifts
   end
 
@@ -185,12 +204,12 @@ defmodule FarmshiftBackend.Scheduling do
   # Validate the final schedule
   defp validate_schedule(schedule) do
     unassigned_shifts = Enum.filter(schedule, & &1["employee_id"] == nil)
-    
+
     cond do
-      length(unassigned_shifts) > 0 -> 
+      length(unassigned_shifts) > 0 ->
         Logger.warning("Unable to assign employees to #{length(unassigned_shifts)} shifts")
         {:error, "Unable to assign employees to #{length(unassigned_shifts)} shifts"}
-      true -> 
+      true ->
         :ok
     end
   end

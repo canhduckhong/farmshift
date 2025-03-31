@@ -1,6 +1,5 @@
 defmodule FarmshiftBackendWeb.ScheduleControllerTest do
   use FarmshiftBackendWeb.ConnCase
-  use FarmshiftBackend.DataCase
 
   alias FarmshiftBackend.Employees.Employee
   alias FarmshiftBackend.Repo
@@ -13,6 +12,7 @@ defmodule FarmshiftBackendWeb.ScheduleControllerTest do
     employees = [
       %{
         name: "John Doe",
+        role: "Farm Worker",
         skills: ["Milking", "Feeding"],
         employment_type: "fulltime",
         max_shifts_per_week: 5,
@@ -21,6 +21,7 @@ defmodule FarmshiftBackendWeb.ScheduleControllerTest do
       },
       %{
         name: "Jane Smith",
+        role: "Farm Manager",
         skills: ["Cleaning", "Maintenance"],
         employment_type: "parttime",
         max_shifts_per_week: 3,
@@ -29,6 +30,7 @@ defmodule FarmshiftBackendWeb.ScheduleControllerTest do
       },
       %{
         name: "Mike Johnson",
+        role: "Farm Hand",
         skills: ["Security", "Feeding"],
         employment_type: "fulltime",
         max_shifts_per_week: 6,
