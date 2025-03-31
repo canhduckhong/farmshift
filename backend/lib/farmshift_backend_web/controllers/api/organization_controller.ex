@@ -36,14 +36,16 @@ defmodule FarmshiftBackendWeb.API.OrganizationController do
     # Get organization
     organization = Organizations.get_organization!(id)
 
-    # Check if user has access to this organization
+    # Check if user is a member of the organization
     case Organizations.get_user_role(organization.id, current_user.id) do
-      nil ->
+      {:ok, role} ->
+        conn
+        |> put_status(200)
+        |> render(:show, organization: {organization, role})
+      {:error, :not_found} ->
         conn
         |> put_status(:forbidden)
         |> json(%{error: "You do not have access to this organization"})
-      role ->
-        render(conn, :show, organization: {organization, role})
     end
   end
 
@@ -56,14 +58,20 @@ defmodule FarmshiftBackendWeb.API.OrganizationController do
 
     # Check if user has admin role in this organization
     case Organizations.get_user_role(organization.id, current_user.id) do
-      "admin" ->
-        with {:ok, %Organization{} = updated_organization} <- Organizations.update_organization(organization, organization_params) do
-          render(conn, :show, organization: {updated_organization, "admin"})
+      {:ok, "admin"} ->
+        with {:ok, updated_organization} <- Organizations.update_organization(organization, organization_params) do
+          conn
+          |> put_status(200)
+          |> render(:update, organization: {updated_organization, "admin"})
         end
-      _ ->
+      {:ok, _role} ->
         conn
         |> put_status(:forbidden)
-        |> json(%{error: "You must be an admin to update the organization"})
+        |> json(%{error: "You do not have permission to update this organization"})
+      {:error, :not_found} ->
+        conn
+        |> put_status(:forbidden)
+        |> json(%{error: "You do not have permission to update this organization"})
     end
   end
 
@@ -76,14 +84,18 @@ defmodule FarmshiftBackendWeb.API.OrganizationController do
 
     # Check if user has admin role in this organization
     case Organizations.get_user_role(organization.id, current_user.id) do
-      "admin" ->
+      {:ok, "admin"} ->
         with {:ok, _} <- Organizations.delete_organization(organization) do
           send_resp(conn, :no_content, "")
         end
-      _ ->
+      {:ok, _role} ->
         conn
         |> put_status(:forbidden)
-        |> json(%{error: "You must be an admin to delete the organization"})
+        |> json(%{error: "You do not have permission to delete this organization"})
+      {:error, :not_found} ->
+        conn
+        |> put_status(:forbidden)
+        |> json(%{error: "You do not have permission to delete this organization"})
     end
   end
 
@@ -115,16 +127,34 @@ defmodule FarmshiftBackendWeb.API.OrganizationController do
 
     # Check if user has admin role in this organization
     case Organizations.get_user_role(organization.id, current_user.id) do
-      "admin" ->
-        with {:ok, _membership} <- Organizations.add_user_to_organization(organization.id, user_id, role) do
-          conn
-          |> put_status(:created)
-          |> json(%{success: true})
+      {:ok, "admin"} ->
+        with {:ok, _} <- Organizations.add_user_to_organization(organization.id, user_id, role) do
+          send_resp(conn, :no_content, "")
         end
       _ ->
         conn
         |> put_status(:forbidden)
-        |> json(%{error: "You must be an admin to add members"})
+        |> json(%{error: "You do not have permission to add members"})
+    end
+  end
+
+  def remove_member(conn, %{"id" => id, "user_id" => user_id}) do
+    # Get the current user from the token
+    current_user = conn.assigns.current_user
+
+    # Get organization
+    organization = Organizations.get_organization!(id)
+
+    # Check if user has admin role in this organization
+    case Organizations.get_user_role(organization.id, current_user.id) do
+      {:ok, "admin"} ->
+        with {:ok, _} <- Organizations.remove_user_from_organization(organization.id, user_id) do
+          send_resp(conn, :no_content, "")
+        end
+      _ ->
+        conn
+        |> put_status(:forbidden)
+        |> json(%{error: "You do not have permission to remove members"})
     end
   end
 
@@ -137,47 +167,14 @@ defmodule FarmshiftBackendWeb.API.OrganizationController do
 
     # Check if user has admin role in this organization
     case Organizations.get_user_role(organization.id, current_user.id) do
-      "admin" ->
+      {:ok, "admin"} ->
         with {:ok, _} <- Organizations.update_user_role(organization.id, user_id, role) do
-          conn
-          |> json(%{success: true})
-        end
-      _ ->
-        conn
-        |> put_status(:forbidden)
-        |> json(%{error: "You must be an admin to update member roles"})
-    end
-  end
-
-  def remove_member(conn, %{"id" => id, "user_id" => user_id}) do
-    # Get the current user from the token
-    current_user = conn.assigns.current_user
-
-    # Get organization
-    organization = Organizations.get_organization!(id)
-
-    # Check if user has admin role in this organization and is not removing themselves as the last admin
-    case Organizations.get_user_role(organization.id, current_user.id) do
-      "admin" ->
-        if user_id == current_user.id do
-          # Check if there are other admins
-          admin_count = Organizations.count_organization_admins(organization.id)
-          if admin_count <= 1 do
-            conn
-            |> put_status(:forbidden)
-            |> json(%{error: "Cannot remove the last admin from the organization"})
-          else
-            Organizations.remove_user_from_organization(organization.id, user_id)
-            send_resp(conn, :no_content, "")
-          end
-        else
-          Organizations.remove_user_from_organization(organization.id, user_id)
           send_resp(conn, :no_content, "")
         end
       _ ->
         conn
         |> put_status(:forbidden)
-        |> json(%{error: "You must be an admin to remove members"})
+        |> json(%{error: "You do not have permission to update member roles"})
     end
   end
 

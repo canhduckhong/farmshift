@@ -3,13 +3,12 @@ defmodule FarmshiftBackendWeb.API.OrganizationControllerTest do
 
   alias FarmshiftBackend.Organizations
   alias FarmshiftBackend.Accounts
-  alias FarmshiftBackend.Organizations.Organization
 
   setup %{conn: conn} do
     # Create a user for authentication
     {:ok, user} = Accounts.create_user(%{
-      email: "test_user@example.com", 
-      password: "password123", 
+      email: "test_user@example.com",
+      password: "password123",
       name: "Test User"
     })
 
@@ -56,10 +55,10 @@ defmodule FarmshiftBackendWeb.API.OrganizationControllerTest do
 
       # Assert response
       assert %{"id" => id, "name" => "New Test Organization"} = json_response(conn, 201)["data"]
-      
+
       # Verify the user is added as an admin
       assert {:ok, "admin"} = Organizations.get_user_role(id, user.id)
-      
+
       # Check location header
       assert [location] = get_resp_header(conn, "location")
       assert location == "/api/organizations/#{id}"
@@ -94,8 +93,8 @@ defmodule FarmshiftBackendWeb.API.OrganizationControllerTest do
 
       # Assert response
       assert %{
-        "id" => id, 
-        "name" => "Detailed Org", 
+        "id" => id,
+        "name" => "Detailed Org",
         "user_role" => "admin"
       } = json_response(conn, 200)["data"]
       assert id == organization.id
@@ -136,7 +135,7 @@ defmodule FarmshiftBackendWeb.API.OrganizationControllerTest do
 
       # Assert response
       assert %{
-        "name" => "Updated Organization Name", 
+        "name" => "Updated Organization Name",
         "description" => "Updated description"
       } = json_response(conn, 200)["data"]
     end
@@ -211,8 +210,8 @@ defmodule FarmshiftBackendWeb.API.OrganizationControllerTest do
 
       # Create another user to add to the organization
       {:ok, new_member} = Accounts.create_user(%{
-        email: "new_member@example.com", 
-        password: "password123", 
+        email: "new_member@example.com",
+        password: "password123",
         name: "New Member"
       })
 
@@ -242,8 +241,8 @@ defmodule FarmshiftBackendWeb.API.OrganizationControllerTest do
 
       # Create another user to attempt to add
       {:ok, new_member} = Accounts.create_user(%{
-        email: "unauthorized_member@example.com", 
-        password: "password123", 
+        email: "unauthorized_member@example.com",
+        password: "password123",
         name: "Unauthorized Member"
       })
 
@@ -272,8 +271,8 @@ defmodule FarmshiftBackendWeb.API.OrganizationControllerTest do
 
       # Create another user to add and then remove
       {:ok, member_to_remove} = Accounts.create_user(%{
-        email: "removable_member@example.com", 
-        password: "password123", 
+        email: "removable_member@example.com",
+        password: "password123",
         name: "Removable Member"
       })
       {:ok, _} = Organizations.add_user_to_organization(organization.id, member_to_remove.id, "viewer")
@@ -298,8 +297,8 @@ defmodule FarmshiftBackendWeb.API.OrganizationControllerTest do
 
       # Create another user to attempt to remove
       {:ok, member_to_remove} = Accounts.create_user(%{
-        email: "unauthorized_removal@example.com", 
-        password: "password123", 
+        email: "unauthorized_removal@example.com",
+        password: "password123",
         name: "Unauthorized Removal Member"
       })
       {:ok, _} = Organizations.add_user_to_organization(organization.id, member_to_remove.id, "viewer")
@@ -323,8 +322,8 @@ defmodule FarmshiftBackendWeb.API.OrganizationControllerTest do
 
       # Create another user to update role
       {:ok, member_to_update} = Accounts.create_user(%{
-        email: "role_update_member@example.com", 
-        password: "password123", 
+        email: "role_update_member@example.com",
+        password: "password123",
         name: "Role Update Member"
       })
       {:ok, _} = Organizations.add_user_to_organization(organization.id, member_to_update.id, "viewer")
@@ -354,8 +353,8 @@ defmodule FarmshiftBackendWeb.API.OrganizationControllerTest do
 
       # Create another user to attempt role update
       {:ok, member_to_update} = Accounts.create_user(%{
-        email: "unauthorized_role_update@example.com", 
-        password: "password123", 
+        email: "unauthorized_role_update@example.com",
+        password: "password123",
         name: "Unauthorized Role Update Member"
       })
       {:ok, _} = Organizations.add_user_to_organization(organization.id, member_to_update.id, "viewer")

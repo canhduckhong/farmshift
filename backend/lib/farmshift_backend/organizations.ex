@@ -132,14 +132,33 @@ defmodule FarmshiftBackend.Organizations do
 
   @doc """
   Removes a user from an organization.
+  Returns {:ok, _} if successful, or {:error, :not_found} if the user or organization is not found.
   """
   def remove_user_from_organization(organization_id, user_id) do
     query = from ou in OrganizationUser,
             where: ou.organization_id == ^organization_id and ou.user_id == ^user_id
             
-    Repo.delete_all(query)
+    case Repo.delete_all(query) do
+      {0, _} -> {:error, :not_found}
+      {1, _} -> {:ok, nil}
+    end
   end
   
+  @doc """
+  Gets a user's role in an organization.
+  Returns {:error, :not_found} if the user is not a member of the organization.
+  """
+  def get_user_role(organization_id, user_id) do
+    query = from ou in OrganizationUser,
+            where: ou.organization_id == ^organization_id and ou.user_id == ^user_id,
+            select: ou.role
+            
+    case Repo.one(query) do
+      nil -> {:error, :not_found}
+      role -> {:ok, role}
+    end
+  end
+
   @doc """
   Updates a user's role in an organization.
   """
@@ -154,18 +173,6 @@ defmodule FarmshiftBackend.Organizations do
         |> OrganizationUser.changeset(%{role: role})
         |> Repo.update()
     end
-  end
-
-  @doc """
-  Gets a user's role in an organization.
-  Returns nil if the user is not a member of the organization.
-  """
-  def get_user_role(organization_id, user_id) do
-    query = from ou in OrganizationUser,
-            where: ou.organization_id == ^organization_id and ou.user_id == ^user_id,
-            select: ou.role
-            
-    Repo.one(query)
   end
 
   @doc """
