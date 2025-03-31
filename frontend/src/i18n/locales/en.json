@@ -59,7 +59,8 @@
     "assignTo": "Assign to",
     "role": "Role",
     "selectEmployee": "Select an employee",
-    "selectRole": "Select a role"
+    "selectRole": "Select a role",
+    "assign": "Assign"
   },
   "employees": {
     "title": "Employees Management",

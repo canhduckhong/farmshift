@@ -1,14 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
+import React, { useState } from 'react';
+import { useDispatch } from 'react-redux';
 import { useTranslation } from 'react-i18next';
-import { RootState } from '../types';
 import { AppDispatch } from '../store';
-import { 
-  createEmployee, 
-  updateEmployee, 
-  closeEmployeeModal,
-  selectSelectedEmployee
-} from '../store/employeesSlice';
+import { createEmployee, closeEmployeeModal } from '../store/employeesSlice';
 import { Employee } from '../store/shiftsSlice';
 import { availableSkills } from '../store/shiftsSlice';
 import Modal from './Modal';
@@ -19,10 +13,9 @@ export interface EmployeePreferences {
   preferredDaysOff: string[];
 }
 
-const EmployeeModal: React.FC = () => {
+const CreateEmployeeModal: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
   const { t } = useTranslation();
   const dispatch: AppDispatch = useDispatch();
-  const selectedEmployee = useSelector((state: RootState) => selectSelectedEmployee(state));
   
   const [name, setName] = useState('');
   const [role, setRole] = useState('');
@@ -35,28 +28,6 @@ const EmployeeModal: React.FC = () => {
   const timeSlots = ['Morning', 'Afternoon', 'Evening'];
   const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
   
-  // Initialize form with selected employee data or empty for new employee
-  useEffect(() => {
-    if (selectedEmployee) {
-      setName(selectedEmployee.name);
-      setRole(selectedEmployee.role);
-      setEmploymentType(selectedEmployee.employmentType);
-      setSkills(selectedEmployee.skills);
-      setMaxShiftsPerWeek(selectedEmployee.maxShiftsPerWeek);
-      setPreferredShifts(selectedEmployee.preferences.preferredShifts);
-      setPreferredDaysOff(selectedEmployee.preferences.preferredDaysOff);
-    } else {
-      // Reset form for new employee
-      setName('');
-      setRole('');
-      setEmploymentType('fulltime');
-      setSkills([]);
-      setMaxShiftsPerWeek(5);
-      setPreferredShifts([]);
-      setPreferredDaysOff([]);
-    }
-  }, [selectedEmployee]);
-  
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -65,31 +36,17 @@ const EmployeeModal: React.FC = () => {
       preferredDaysOff
     };
     
-    if (selectedEmployee) {
-      // Update existing employee
-      const updatedEmployee: Employee = {
-        id: selectedEmployee.id,
-        name,
-        role,
-        employmentType,
-        skills,
-        preferences,
-        maxShiftsPerWeek
-      };
-      dispatch(updateEmployee(updatedEmployee));
-    } else {
-      // Add new employee
-      const newEmployee: Omit<Employee, 'id'> = {
-        name,
-        role,
-        employmentType,
-        skills,
-        preferences,
-        maxShiftsPerWeek
-      };
-      dispatch(createEmployee(newEmployee));
-    }
+    // Add new employee
+    const newEmployee: Omit<Employee, 'id'> = {
+      name,
+      role,
+      employmentType,
+      skills,
+      preferences,
+      maxShiftsPerWeek
+    };
     
+    dispatch(createEmployee(newEmployee));
     dispatch(closeEmployeeModal());
   };
   
@@ -123,9 +80,9 @@ const EmployeeModal: React.FC = () => {
 
   return (
     <Modal 
-      isOpen={!!selectedEmployee} 
+      isOpen={isOpen} 
       onClose={handleClose}
-      title={selectedEmployee ? t('employees.editEmployee') : t('employees.addEmployee')}
+      title={t('employees.addEmployee')}
     >
       <form onSubmit={handleSubmit}>
         <div className="mb-4">
@@ -170,6 +127,21 @@ const EmployeeModal: React.FC = () => {
             <option value="parttime">{t('employees.types.parttime')}</option>
             <option value="seasonal">{t('employees.types.seasonal')}</option>
           </select>
+        </div>
+
+        <div className="mb-4">
+          <label htmlFor="maxShifts" className="block text-sm font-medium text-gray-700 mb-1">
+            {t('employees.maxShiftsPerWeek')}
+          </label>
+          <input
+            id="maxShifts"
+            type="number"
+            min="1"
+            max="7"
+            value={maxShiftsPerWeek}
+            onChange={(e) => setMaxShiftsPerWeek(Number(e.target.value))}
+            className="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-primary-500"
+          />
         </div>
 
         <div className="mb-4">
@@ -250,7 +222,7 @@ const EmployeeModal: React.FC = () => {
             type="submit"
             className="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700"
           >
-            {selectedEmployee ? t('common.update') : t('common.create')}
+            {t('common.create')}
           </button>
         </div>
       </form>
@@ -258,4 +230,4 @@ const EmployeeModal: React.FC = () => {
   );
 };
 
-export default EmployeeModal;
+export default CreateEmployeeModal;

@@ -9,6 +9,7 @@ import {
 } from '../store/employeesSlice';
 import { Employee } from '../store/shiftsSlice';
 import EmployeeModal from '../components/EmployeeModal';
+import CreateEmployeeModal from '../components/CreateEmployeeModal';
 import { RootState } from '../types';
 
 const EmployeesPage: React.FC = () => {
@@ -17,6 +18,7 @@ const EmployeesPage: React.FC = () => {
   const { 
     employees, 
     isModalOpen, 
+    selectedEmployee,
     status, 
     error 
   } = useSelector((state: RootState) => state.employees);
@@ -68,8 +70,9 @@ const EmployeesPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Employee Modal */}
-      {isModalOpen && <EmployeeModal />}
+      {/* Employee Modals */}
+      {isModalOpen && !selectedEmployee && <CreateEmployeeModal isOpen={true} />}
+      {isModalOpen && selectedEmployee && <EmployeeModal />}
 
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <table className="min-w-full divide-y divide-gray-200">
