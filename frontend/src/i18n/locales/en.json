@@ -11,7 +11,11 @@
     "save": "Save",
     "loading": "Loading...",
     "error": "Error",
-    "success": "Success"
+    "success": "Success",
+    "edit": "Edit",
+    "delete": "Delete",
+    "cancel": "Cancel",
+    "create": "Create"
   },
   "navigation": {
     "schedule": "Schedule",
@@ -77,6 +81,8 @@
     "preferredDaysOff": "Preferred Days Off",
     "types": {
       "fulltime": "Full-time",
+      "parttime": "Part-time",
+      "seasonal": "Seasonal",
       "intern": "Intern"
     }
   },

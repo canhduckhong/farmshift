@@ -166,9 +166,9 @@ const EmployeeModal: React.FC = () => {
               onChange={(e) => setEmploymentType(e.target.value as 'fulltime' | 'parttime' | 'seasonal')}
               className="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-primary-500"
             >
-              <option value="fulltime">{t('employees.fulltime')}</option>
-              <option value="parttime">{t('employees.parttime')}</option>
-              <option value="seasonal">{t('employees.seasonal')}</option>
+              <option value="fulltime">{t('employees.types.fulltime')}</option>
+              <option value="parttime">{t('employees.types.parttime')}</option>
+              <option value="seasonal">{t('employees.types.seasonal')}</option>
             </select>
           </div>
 
