@@ -16,7 +16,8 @@
     "delete": "Delete",
     "cancel": "Cancel",
     "create": "Create",
-    "weekFormat": "Week {{week}}: {{startDate}} - {{endDate}}"
+    "weekFormat": "Week {{week}}: {{startDate}} - {{endDate}}",
+    "update": "Update"
   },
   "navigation": {
     "schedule": "Schedule",

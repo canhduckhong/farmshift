@@ -43,8 +43,8 @@ const EmployeeModal: React.FC = () => {
       setEmploymentType(selectedEmployee.employmentType);
       setSkills(selectedEmployee.skills);
       setMaxShiftsPerWeek(selectedEmployee.maxShiftsPerWeek);
-      setPreferredShifts(selectedEmployee.preferences.preferredShifts);
-      setPreferredDaysOff(selectedEmployee.preferences.preferredDaysOff);
+      setPreferredShifts(selectedEmployee.preferences?.preferredShifts || []);
+      setPreferredDaysOff(selectedEmployee.preferences?.preferredDaysOff || []);
     } else {
       // Reset form for new employee
       setName('');
