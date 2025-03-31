@@ -33,16 +33,16 @@ defmodule FarmshiftBackendWeb.Router do
     plug :accepts, ["json"]
   end
 
-  # Handle OPTIONS preflight requests for all routes
+  # Handle OPTIONS preflight requests for routes
   scope "/api" do
     pipe_through [:cors]
-    options "/*path", FarmshiftBackendWeb.AuthController, :options
+    options "/api/*path", FarmshiftBackendWeb.AuthController, :options
   end
   
   # Handle OPTIONS preflight requests for mobile routes
   scope "/api/mobile" do
     pipe_through [:cors]
-    options "/*path", FarmshiftBackendWeb.Mobile.AuthController, :options
+    options "/mobile/*path", FarmshiftBackendWeb.Mobile.AuthController, :options
   end
 
   # Public routes that don't require authentication
