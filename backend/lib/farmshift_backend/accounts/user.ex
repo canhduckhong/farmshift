@@ -9,10 +9,15 @@ defmodule FarmshiftBackend.Accounts.User do
     field :password_hash, :string
     field :name, :string
     field :role, :string, default: "employee"
+    field :language, :string
 
     # Temporary fields for registration
     field :password, :string, virtual: true
     field :password_confirmation, :string, virtual: true
+
+    # Associations
+    has_many :organization_users, FarmshiftBackend.Organizations.OrganizationUser
+    has_many :organizations, through: [:organization_users, :organization]
 
     timestamps(type: :utc_datetime)
   end
@@ -22,7 +27,7 @@ defmodule FarmshiftBackend.Accounts.User do
   """
   def create_changeset(user, attrs) do
     user
-    |> cast(attrs, [:email, :password, :password_confirmation, :name, :role])
+    |> cast(attrs, [:email, :password, :password_confirmation, :name, :role, :language])
     |> validate_required([:email, :password, :name])
     |> validate_format(:email, ~r/^[^\s]+@[^\s]+$/, message: "must have the @ sign and no spaces")
     |> validate_length(:email, max: 160)
@@ -35,7 +40,7 @@ defmodule FarmshiftBackend.Accounts.User do
   """
   def update_changeset(user, attrs) do
     user
-    |> cast(attrs, [:email, :name, :role])
+    |> cast(attrs, [:email, :name, :role, :language])
     |> validate_required([:email, :name])
     |> validate_format(:email, ~r/^[^\s]+@[^\s]+$/, message: "must have the @ sign and no spaces")
     |> validate_length(:email, max: 160)

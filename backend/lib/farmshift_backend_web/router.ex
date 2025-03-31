@@ -64,6 +64,14 @@ defmodule FarmshiftBackendWeb.Router do
     
     get "/current_user", AuthController, :current_user
     post "/logout", AuthController, :logout
+    
+    # Add organizations resources
+    resources "/organizations", API.OrganizationController, except: [:new, :edit]
+    
+    # Add custom organization member routes
+    post "/organizations/:id/members", API.OrganizationController, :add_member
+    delete "/organizations/:id/members/:user_id", API.OrganizationController, :remove_member
+    put "/organizations/:id/members/:user_id/role", API.OrganizationController, :update_member_role
   end
   
   # Mobile API routes - Public routes that don't require authentication

@@ -64,7 +64,7 @@ defmodule FarmshiftBackend.Accounts do
       {:error, %Ecto.Changeset{}}
 
   """
-  def create_user(attrs \\  %{}) do
+  def create_user(attrs \\ %{}) do
     %User{}
     |> User.create_changeset(attrs)
     |> Repo.insert()
@@ -123,41 +123,8 @@ defmodule FarmshiftBackend.Accounts do
   end
 
   @doc """
-  Returns an `%Ecto.Changeset{}` for tracking user creation changes.
-
-  ## Examples
-
-      iex> change_user_registration(user)
-      %Ecto.Changeset{data: %User{}}
-
-  """
-  def change_user_registration(%User{} = user, attrs \\ %{}) do
-    User.create_changeset(user, attrs)
-  end
-
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking user profile changes.
-
-  ## Examples
-
-      iex> change_user_profile(user)
-      %Ecto.Changeset{data: %User{}}
-
-  """
-  def change_user_profile(%User{} = user, attrs \\ %{}) do
-    User.update_changeset(user, attrs)
-  end
-
-  @doc """
-  Authenticate a user by email and password.
-
-  ## Examples
-
-      iex> authenticate_user("user@example.com", "password123")
-      {:ok, %User{}}
-
-      iex> authenticate_user("user@example.com", "wrong_password")
-      {:error, :invalid_credentials}
+  Authenticates a user by email and password.
+  Returns {:ok, user} if credentials are valid, {:error, :unauthorized} otherwise.
   """
   def authenticate_user(email, password) do
     user = get_user_by_email(email)
@@ -166,7 +133,27 @@ defmodule FarmshiftBackend.Accounts do
       user && Bcrypt.verify_pass(password, user.password_hash) ->
         {:ok, user}
       true ->
-        {:error, :invalid_credentials}
+        {:error, :unauthorized}
     end
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking user changes.
+
+  ## Examples
+
+      iex> change_user(user)
+      %Ecto.Changeset{data: %User{}}
+
+  """
+  def change_user(%User{} = user, attrs \\ %{}) do
+    User.update_changeset(user, attrs)
+  end
+
+  @doc """
+  Checks if a user exists with the given email.
+  """
+  def user_exists?(email) do
+    Repo.exists?(from u in User, where: u.email == ^email)
   end
 end
