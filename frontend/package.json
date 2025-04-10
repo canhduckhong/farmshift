@@ -52,6 +52,7 @@
     "typescript": "^5.8.2"
   },
   "devDependencies": {
+    "@types/axios": "^0.14.4",
     "autoprefixer": "^10.4.21",
     "postcss": "^8.5.3",
     "react-scripts": "^5.0.1",

@@ -1,18 +1,17 @@
 import axios from 'axios';
 
 const API_URL = process.env.REACT_APP_API_URL 
-  ? `${process.env.REACT_APP_API_URL}/api` 
-  : 'http://localhost:4000/api';
+  ? `${process.env.REACT_APP_API_URL}` 
+  : 'http://localhost:5000';
 
 // Configure axios defaults for CORS
 axios.defaults.withCredentials = true;
 
 export interface User {
-  id: string;
+  id: number;
   email: string;
   name: string;
-  role: string;
-  inserted_at: string;
+  created_at: string;
 }
 
 export interface LoginCredentials {
@@ -66,9 +65,9 @@ export const getAuthToken = (): string | null => {
 // Register new user
 const register = async (userData: RegisterData): Promise<User> => {
   try {
-    const response = await axios.post<AuthResponse>(`${API_URL}/register`, { user: userData });
+    const response = await axios.post<{ user: User; token: string }>(`${API_URL}/auth/register`, userData);
     
-    const { token, user } = response.data.data;
+    const { token, user } = response.data;
     localStorage.setItem('auth_token', token);
     setAuthToken(token);
     
@@ -82,9 +81,9 @@ const register = async (userData: RegisterData): Promise<User> => {
 // Login user
 const login = async (credentials: LoginCredentials): Promise<User> => {
   try {
-    const response = await axios.post<AuthResponse>(`${API_URL}/login`, credentials);
+    const response = await axios.post<{ user: User; token: string }>(`${API_URL}/auth/login`, credentials);
     
-    const { token, user } = response.data.data;
+    const { token, user } = response.data;
     localStorage.setItem('auth_token', token);
     setAuthToken(token);
     
@@ -97,18 +96,9 @@ const login = async (credentials: LoginCredentials): Promise<User> => {
 
 // Logout user
 const logout = async (): Promise<void> => {
-  try {
-    // Call logout API if user is logged in
-    if (localStorage.getItem('auth_token')) {
-      await axios.post(`${API_URL}/logout`);
-    }
-  } catch (error) {
-    console.error('Logout error:', error);
-  } finally {
-    // Always clear local storage and headers
-    localStorage.removeItem('auth_token');
-    setAuthToken(null);
-  }
+  // Just clear local storage and headers since our backend is stateless
+  localStorage.removeItem('auth_token');
+  setAuthToken(null);
 };
 
 // Get current user information
@@ -120,9 +110,9 @@ const getCurrentUser = async (): Promise<User | null> => {
       return null;
     }
     
-    const response = await axios.get<{ status: string; data: { user: User } }>(`${API_URL}/current_user`);
-    console.log('Current user fetched successfully:', response.data.data.user);
-    return response.data.data.user;
+    const response = await axios.get<User>(`${API_URL}/me`);
+    console.log('Current user fetched successfully:', response.data);
+    return response.data;
   } catch (error) {
     console.error('Error fetching current user:', error);
     localStorage.removeItem('auth_token');

@@ -53,8 +53,7 @@ const RegisterPage: React.FC = () => {
     dispatch(register({
       name,
       email,
-      password,
-      role: 'employee' // Default role for new registrations
+      password
     }));
   };
 
