@@ -1,75 +1,40 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useTranslation } from 'react-i18next';
-import { AppDispatch } from '../store';
+import { RootState } from '../store';
 import { 
-  fetchEmployees, 
-  openEmployeeModal, 
-  selectEmployees,
-} from '../store/employeesSlice';
-import { Employee } from '../store/shiftsSlice';
+  deleteEmployee, 
+  selectEmployee, 
+  openNewEmployeeModal 
+} from '../store/shiftsSlice';
 import EmployeeModal from '../components/EmployeeModal';
-import CreateEmployeeModal from '../components/CreateEmployeeModal';
-import DeleteEmployeeModal from '../components/DeleteEmployeeModal';
-import { RootState } from '../types';
+import LanguageSelector from '../components/LanguageSelector';
 
 const EmployeesPage: React.FC = () => {
   const { t } = useTranslation();
-  const dispatch = useDispatch<AppDispatch>();
-  const employees = useSelector(selectEmployees);
-  const { 
-    isModalOpen, 
-    selectedEmployee,
-    status, 
-    error 
-  } = useSelector((state: RootState) => state.employees);
-
-  // State for delete confirmation modal
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [employeeToDelete, setEmployeeToDelete] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (status === 'idle') {
-      dispatch(fetchEmployees());
-    }
-  }, [status, dispatch]);
+  const dispatch = useDispatch();
+  const { employees, isEmployeeModalOpen } = useSelector((state: RootState) => state.shifts);
 
   const handleAddEmployee = () => {
-    dispatch(openEmployeeModal(null));
+    dispatch(openNewEmployeeModal());
   };
 
-  const handleEditEmployee = (employee: Employee) => {
-    dispatch(openEmployeeModal(employee));
+  const handleEditEmployee = (id: string) => {
+    dispatch(selectEmployee(id));
   };
 
-  const handleDeleteEmployee = (employeeId: string) => {
-    setEmployeeToDelete(employeeId);
-    setIsDeleteModalOpen(true);
+  const handleDeleteEmployee = (id: string) => {
+    if (window.confirm(t('employees.confirmDelete'))) {
+      dispatch(deleteEmployee(id));
+    }
   };
-
-  const handleCloseDeleteModal = () => {
-    setIsDeleteModalOpen(false);
-    setEmployeeToDelete(null);
-  };
-
-  // Loading and error states
-  if (status === 'loading') {
-    return <div className="text-center py-10">{t('common.loading')}</div>;
-  }
-
-  if (status === 'failed') {
-    return (
-      <div className="text-center py-10 text-red-600">
-        {t('common.error')}: {error}
-      </div>
-    );
-  }
 
   return (
     <div className="container mx-auto p-4">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-800">{t('employees.title')}</h1>
         <div className="flex space-x-4">
+          <LanguageSelector />
           <button
             onClick={handleAddEmployee}
             className="bg-primary-600 text-white px-4 py-2 rounded-md hover:bg-primary-700 transition-colors"
@@ -78,16 +43,6 @@ const EmployeesPage: React.FC = () => {
           </button>
         </div>
       </div>
-
-      {/* Employee Modals */}
-      {isModalOpen && !selectedEmployee && <CreateEmployeeModal isOpen={true} />}
-      {isModalOpen && selectedEmployee && <EmployeeModal />}
-
-      <DeleteEmployeeModal 
-        isOpen={isDeleteModalOpen}
-        onClose={handleCloseDeleteModal}
-        employeeId={employeeToDelete}
-      />
 
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <table className="min-w-full divide-y divide-gray-200">
@@ -111,7 +66,7 @@ const EmployeesPage: React.FC = () => {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {employees.map((employee: Employee) => (
+            {employees.map((employee) => (
               <tr key={employee.id} className="hover:bg-gray-50">
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                   {employee.name}
@@ -120,24 +75,33 @@ const EmployeesPage: React.FC = () => {
                   {employee.role}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {employee.employmentType}
+                  {t(`employees.types.${employee.employmentType}`)}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {employee.skills.join(', ')}
+                  <div className="flex flex-wrap gap-1">
+                    {employee.skills.map((skill, index) => (
+                      <span 
+                        key={index} 
+                        className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100 text-primary-800"
+                      >
+                        {skill}
+                      </span>
+                    ))}
+                  </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <div className="flex justify-end space-x-2">
                     <button
-                      onClick={() => handleEditEmployee(employee)}
-                      className="text-primary-600 hover:text-primary-900 transition-colors"
+                      onClick={() => handleEditEmployee(employee.id)}
+                      className="text-indigo-600 hover:text-indigo-900"
                     >
-                      {t('common.edit')}
+                      {t('employees.edit')}
                     </button>
                     <button
                       onClick={() => handleDeleteEmployee(employee.id)}
-                      className="text-red-600 hover:text-red-900 transition-colors"
+                      className="text-red-600 hover:text-red-900"
                     >
-                      {t('common.delete')}
+                      {t('employees.delete')}
                     </button>
                   </div>
                 </td>
@@ -146,6 +110,8 @@ const EmployeesPage: React.FC = () => {
           </tbody>
         </table>
       </div>
+
+      {isEmployeeModalOpen && <EmployeeModal />}
     </div>
   );
 };

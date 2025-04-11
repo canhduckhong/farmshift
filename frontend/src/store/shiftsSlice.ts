@@ -1,16 +1,15 @@
-import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
-import { employeeService } from '../services/employeeService';
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 // Skills/qualifications available in the system
 export const availableSkills = [
-  'Milking', 
-  'Feeding', 
-  'Cleaning', 
-  'Maintenance', 
-  'Equipment Operation', 
-  'Animal Health Monitoring', 
-  'General Care', 
-  'Veterinary Care'
+  'Milking',
+  'Feeding',
+  'Cleaning',
+  'Maintenance',
+  'Veterinary Care',
+  'General Care',
+  'Equipment Operation',
+  'Animal Health Monitoring'
 ];
 
 // Shift requirements by time slot
@@ -21,50 +20,89 @@ export const shiftRequirements = {
 };
 
 // Enhanced employee data with qualifications, preferences, etc.
+export const mockEmployees: Employee[] = [
+  { 
+    id: '1', 
+    name: 'Anders Jensen', 
+    role: 'Manager',
+    employmentType: 'fulltime',
+    skills: ['Milking', 'Feeding', 'Equipment Operation', 'Animal Health Monitoring'],
+    preferences: { preferredShifts: ['Morning'], preferredDaysOff: ['Sunday'] },
+    maxShiftsPerWeek: 5
+  },
+  { 
+    id: '2', 
+    name: 'Maria Poulsen', 
+    role: 'Assistant Manager',
+    employmentType: 'fulltime',
+    skills: ['Milking', 'Feeding', 'Cleaning', 'Animal Health Monitoring'],
+    preferences: { preferredShifts: ['Morning', 'Afternoon'], preferredDaysOff: ['Saturday', 'Sunday'] },
+    maxShiftsPerWeek: 5
+  },
+  { 
+    id: '3', 
+    name: 'Piotr Kowalski', 
+    role: 'Worker',
+    employmentType: 'fulltime',
+    skills: ['Feeding', 'Cleaning', 'Maintenance'],
+    preferences: { preferredShifts: ['Afternoon', 'Evening'], preferredDaysOff: ['Monday'] },
+    maxShiftsPerWeek: 6
+  },
+  { 
+    id: '4', 
+    name: 'Olga Ivanova', 
+    role: 'Worker',
+    employmentType: 'intern',
+    skills: ['Cleaning', 'Feeding', 'General Care'],
+    preferences: { preferredShifts: ['Morning'], preferredDaysOff: ['Wednesday', 'Sunday'] },
+    maxShiftsPerWeek: 4
+  },
+  { 
+    id: '5', 
+    name: 'Juan Fernandez', 
+    role: 'Worker',
+    employmentType: 'fulltime',
+    skills: ['Maintenance', 'Equipment Operation', 'Cleaning'],
+    preferences: { preferredShifts: ['Afternoon'], preferredDaysOff: ['Sunday'] },
+    maxShiftsPerWeek: 5
+  },
+  { 
+    id: '6', 
+    name: 'Sophia Larsen', 
+    role: 'Veterinarian',
+    employmentType: 'fulltime',
+    skills: ['Veterinary Care', 'Animal Health Monitoring', 'General Care'],
+    preferences: { preferredShifts: ['Morning', 'Afternoon'], preferredDaysOff: ['Saturday', 'Sunday'] },
+    maxShiftsPerWeek: 5
+  },
+];
+
+export const mockRoles = [
+  'Milking',
+  'Feeding',
+  'Cleaning',
+  'Maintenance',
+  'Veterinary Care',
+  'General Care',
+  'Equipment Operation',
+  'Animal Health Monitoring'
+];
+
+export interface EmployeePreferences {
+  preferredShifts: string[];
+  preferredDaysOff: string[];
+}
+
 export interface Employee {
   id: string;
   name: string;
   role: string;
-  employmentType: 'fulltime' | 'parttime' | 'seasonal';
+  employmentType: 'fulltime' | 'intern';
   skills: string[];
-  preferences: {
-    preferredShifts: string[];
-    preferredDaysOff: string[];
-  };
+  preferences: EmployeePreferences;
   maxShiftsPerWeek: number;
 }
 
-// Async thunks for API interactions
-export const fetchEmployees = createAsyncThunk(
-  'shifts/fetchEmployees',
-  async () => {
-    return await employeeService.fetchEmployees();
-  }
-);
-
-export const createEmployee = createAsyncThunk(
-  'shifts/createEmployee',
-  async (employeeData: Omit<Employee, 'id'>) => {
-    return await employeeService.createEmployee(employeeData);
-  }
-);
-
-export const updateEmployee = createAsyncThunk(
-  'shifts/updateEmployee',
-  async (employee: Employee) => {
-    return await employeeService.updateEmployee(employee);
-  }
-);
-
-export const deleteEmployee = createAsyncThunk(
-  'shifts/deleteEmployee',
-  async (id: string) => {
-    await employeeService.deleteEmployee(id);
-    return id;
-  }
-);
-
-// Shift interface
 export interface Shift {
   id: string;
   day: string;
@@ -73,21 +111,18 @@ export interface Shift {
   role: string | null;
 }
 
-// Validation rule interface
 export interface ValidationRule {
   name: string;
   description: string;
   enabled: boolean;
 }
 
-// AI Scheduler config interface
 export interface AISchedulerConfig {
   prioritizeSkillMatch: boolean;
   respectPreferences: boolean;
   enabledRules: ValidationRule[];
 }
 
-// Shifts state interface
 export interface ShiftsState {
   shifts: Shift[];
   employees: Employee[];
@@ -99,9 +134,6 @@ export interface ShiftsState {
   showSuggestions: boolean;
   selectedEmployee: Employee | null;
   isEmployeeModalOpen: boolean;
-  status: 'idle' | 'loading' | 'succeeded' | 'failed';
-  error: string | null;
-  availableSkills: string[];
 }
 
 const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -152,7 +184,7 @@ const defaultValidationRules: ValidationRule[] = [
 
 const initialState: ShiftsState = {
   shifts: initialShifts,
-  employees: [],
+  employees: mockEmployees,
   selectedShift: null,
   isModalOpen: false,
   aiConfig: {
@@ -164,10 +196,7 @@ const initialState: ShiftsState = {
   aiSuggestions: null,
   showSuggestions: false,
   selectedEmployee: null,
-  isEmployeeModalOpen: false,
-  status: 'idle',
-  error: null,
-  availableSkills: availableSkills
+  isEmployeeModalOpen: false
 };
 
 export const shiftsSlice = createSlice({
@@ -235,22 +264,52 @@ export const shiftsSlice = createSlice({
         state.aiConfig.enabledRules[ruleIndex].enabled = !state.aiConfig.enabledRules[ruleIndex].enabled;
       }
     },
+    
     // Employee Management
-    openNewEmployeeModal: (state) => {
-      state.isEmployeeModalOpen = true;
-      state.selectedEmployee = null;
+    addEmployee: (state, action: PayloadAction<Omit<Employee, 'id'>>) => {
+      const newId = (Math.max(...state.employees.map(e => parseInt(e.id))) + 1).toString();
+      const newEmployee = {
+        ...action.payload,
+        id: newId
+      };
+      state.employees.push(newEmployee);
     },
-    closeEmployeeModal: (state) => {
-      state.isEmployeeModalOpen = false;
-      state.selectedEmployee = null;
-    },
-    selectEmployee: (state, action: PayloadAction<string>) => {
-      const employee = state.employees.find(emp => emp.id === action.payload);
-      if (employee) {
-        state.selectedEmployee = employee;
-        state.isEmployeeModalOpen = true;
+
+    updateEmployee: (state, action: PayloadAction<Employee>) => {
+      const index = state.employees.findIndex(e => e.id === action.payload.id);
+      if (index !== -1) {
+        state.employees[index] = action.payload;
       }
     },
+
+    deleteEmployee: (state, action: PayloadAction<string>) => {
+      // Remove employee from shifts first
+      state.shifts.forEach(shift => {
+        if (shift.employeeId === action.payload) {
+          shift.employeeId = null;
+          shift.role = null;
+        }
+      });
+      
+      // Then remove from employees list
+      state.employees = state.employees.filter(e => e.id !== action.payload);
+    },
+
+    selectEmployee: (state, action: PayloadAction<string>) => {
+      state.selectedEmployee = state.employees.find(e => e.id === action.payload) || null;
+      state.isEmployeeModalOpen = true;
+    },
+
+    closeEmployeeModal: (state) => {
+      state.selectedEmployee = null;
+      state.isEmployeeModalOpen = false;
+    },
+
+    openNewEmployeeModal: (state) => {
+      state.selectedEmployee = null;
+      state.isEmployeeModalOpen = true;
+    },
+
     // Drag and drop functionality for shifts
     moveEmployeeBetweenShifts: (state, action: PayloadAction<{sourceShiftId: string; targetShiftId: string}>) => {
       const { sourceShiftId, targetShiftId } = action.payload;
@@ -291,44 +350,9 @@ export const shiftsSlice = createSlice({
       }
     },
   },
-  extraReducers: (builder) => {
-    builder
-      // Fetch Employees
-      .addCase(fetchEmployees.pending, (state) => {
-        state.status = 'loading';
-      })
-      .addCase(fetchEmployees.fulfilled, (state, action) => {
-        state.status = 'succeeded';
-        state.employees = action.payload;
-      })
-      .addCase(fetchEmployees.rejected, (state, action) => {
-        state.status = 'failed';
-        state.error = action.error.message || 'Failed to fetch employees';
-      })
-      
-      // Create Employee
-      .addCase(createEmployee.fulfilled, (state, action) => {
-        state.employees.push(action.payload);
-        state.isEmployeeModalOpen = false;
-      })
-      
-      // Update Employee
-      .addCase(updateEmployee.fulfilled, (state, action) => {
-        const index = state.employees.findIndex(emp => emp.id === action.payload.id);
-        if (index !== -1) {
-          state.employees[index] = action.payload;
-        }
-        state.isEmployeeModalOpen = false;
-      })
-      
-      // Delete Employee
-      .addCase(deleteEmployee.fulfilled, (state, action) => {
-        state.employees = state.employees.filter(emp => emp.id !== action.payload);
-      });
-  }
 });
 
-export const { 
+export const {
   selectShift,
   closeModal,
   assignShift,
@@ -341,9 +365,12 @@ export const {
   updateAiConfig,
   toggleValidationRule,
   moveEmployeeBetweenShifts,
-  openNewEmployeeModal,
+  addEmployee,
+  updateEmployee,
+  deleteEmployee,
+  selectEmployee,
   closeEmployeeModal,
-  selectEmployee
+  openNewEmployeeModal
 } = shiftsSlice.actions;
 
 export default shiftsSlice.reducer;

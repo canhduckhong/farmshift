@@ -6,8 +6,11 @@ export const mockEmployees: Employee[] = [
     name: 'Anders Jensen', 
     role: 'Manager',
     employmentType: 'fulltime',
-    skills: ['Milking', 'Feeding', 'Equipment Operation', 'Animal Health Monitoring'],
-    preferences: { preferredShifts: ['Morning'], preferredDaysOff: ['Sunday'] },
+    skills: ['Management', 'Feeding', 'Milking'],
+    preferences: {
+      preferredShifts: ['Morning'],
+      preferredDaysOff: ['Saturday', 'Sunday']
+    },
     maxShiftsPerWeek: 5
   },
   { 
@@ -15,8 +18,11 @@ export const mockEmployees: Employee[] = [
     name: 'Maria Poulsen', 
     role: 'Assistant Manager',
     employmentType: 'fulltime',
-    skills: ['Milking', 'Feeding', 'Cleaning', 'Animal Health Monitoring'],
-    preferences: { preferredShifts: ['Morning', 'Afternoon'], preferredDaysOff: ['Saturday', 'Sunday'] },
+    skills: ['Management', 'Cleaning', 'Maintenance'],
+    preferences: {
+      preferredShifts: ['Afternoon'],
+      preferredDaysOff: ['Sunday']
+    },
     maxShiftsPerWeek: 5
   },
   { 
@@ -24,36 +30,48 @@ export const mockEmployees: Employee[] = [
     name: 'Piotr Kowalski', 
     role: 'Worker',
     employmentType: 'fulltime',
-    skills: ['Feeding', 'Cleaning', 'Maintenance'],
-    preferences: { preferredShifts: ['Afternoon', 'Evening'], preferredDaysOff: ['Monday'] },
-    maxShiftsPerWeek: 6
+    skills: ['Feeding', 'Milking', 'Cleaning'],
+    preferences: {
+      preferredShifts: ['Morning', 'Afternoon'],
+      preferredDaysOff: ['Friday', 'Saturday']
+    },
+    maxShiftsPerWeek: 5
   },
   { 
     id: '4', 
     name: 'Olga Ivanova', 
     role: 'Worker',
-    employmentType: 'parttime',
-    skills: ['Cleaning', 'Feeding', 'General Care'],
-    preferences: { preferredShifts: ['Morning'], preferredDaysOff: ['Wednesday', 'Sunday'] },
-    maxShiftsPerWeek: 4
+    employmentType: 'fulltime',
+    skills: ['Milking', 'Feeding', 'Veterinary Care'],
+    preferences: {
+      preferredShifts: ['Morning'],
+      preferredDaysOff: ['Wednesday', 'Thursday']
+    },
+    maxShiftsPerWeek: 5
   },
   { 
     id: '5', 
     name: 'Juan Fernandez', 
     role: 'Worker',
-    employmentType: 'fulltime',
-    skills: ['Maintenance', 'Equipment Operation', 'Cleaning'],
-    preferences: { preferredShifts: ['Afternoon'], preferredDaysOff: ['Sunday'] },
-    maxShiftsPerWeek: 5
+    employmentType: 'intern',
+    skills: ['Cleaning', 'Feeding', 'Maintenance'],
+    preferences: {
+      preferredShifts: ['Afternoon'],
+      preferredDaysOff: ['Monday']
+    },
+    maxShiftsPerWeek: 3
   },
   { 
     id: '6', 
     name: 'Sophia Larsen', 
     role: 'Veterinarian',
-    employmentType: 'seasonal',
-    skills: ['Veterinary Care', 'Animal Health Monitoring', 'General Care'],
-    preferences: { preferredShifts: ['Morning', 'Afternoon'], preferredDaysOff: ['Saturday', 'Sunday'] },
-    maxShiftsPerWeek: 5
+    employmentType: 'fulltime',
+    skills: ['Veterinary Care', 'Feeding', 'Milking'],
+    preferences: {
+      preferredShifts: ['Morning', 'Evening'],
+      preferredDaysOff: ['Tuesday', 'Wednesday']
+    },
+    maxShiftsPerWeek: 4
   },
 ];
 

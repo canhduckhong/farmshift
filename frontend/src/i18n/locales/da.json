@@ -1,6 +1,6 @@
 {
   "common": {
-    "weeklySchedule": "Ugentlig tidsplan",
+    "weeklySchedule": "Ugentlig Vagtplan",
     "add": "Tilføj",
     "timeSlot": "Tidspunkt",
     "generate": "Generer AI Vagtplan",
@@ -8,11 +8,7 @@
     "apply": "Anvend",
     "discard": "Annuller",
     "close": "Luk",
-    "save": "Gem",
-    "loading": "Indlæser...",
-    "error": "Fejl",
-    "success": "Succes",
-    "weekFormat": "Uge {{week}}: {{startDate}} - {{endDate}}"
+    "save": "Gem"
   },
   "navigation": {
     "schedule": "Vagtplan",
@@ -72,7 +68,6 @@
     "save": "Gem",
     "add": "Tilføj",
     "confirmDelete": "Er du sikker på, at du vil slette denne medarbejder?",
-    "deleteConfirmation": "Er du sikker på, at du vil slette medarbejderen {{name}}? Denne handling kan ikke fortrydes.",
     "employmentType": "Ansættelsestype",
     "maxShifts": "Maksimalt antal vagter pr. uge",
     "preferredShifts": "Foretrukne vagter",
@@ -81,22 +76,5 @@
       "fulltime": "Fuldtid",
       "intern": "Praktikant"
     }
-  },
-  "auth": {
-    "login": "Log ind",
-    "register": "Opret konto",
-    "logout": "Log ud",
-    "createAccount": "Opret en konto",
-    "emailAddress": "E-mailadresse",
-    "password": "Adgangskode",
-    "confirmPassword": "Bekræft adgangskode",
-    "fullName": "Fulde navn",
-    "or": "Eller",
-    "demoCredentials": "Demo loginoplysninger",
-    "passwordsDoNotMatch": "Adgangskoderne stemmer ikke overens",
-    "passwordTooShort": "Adgangskoden skal være mindst 6 tegn lang",
-    "loginSuccess": "Succesfuldt logget ind",
-    "registerSuccess": "Konto oprettet med succes",
-    "logoutSuccess": "Succesfuldt logget ud"
   }
 }
