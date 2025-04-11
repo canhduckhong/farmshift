@@ -3,6 +3,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import { RootState } from '../store';
 import { Shift, selectShift, clearShift, moveEmployeeBetweenShifts } from '../store/shiftsSlice';
+import CustomShiftModal from './CustomShiftModal';
 
 interface WeeklyCalendarProps {
   useAiSuggestions?: boolean;
@@ -20,6 +21,9 @@ const WeeklyCalendar: React.FC<WeeklyCalendarProps> = ({ useAiSuggestions = fals
   const [isDragging, setIsDragging] = useState(false);
   const [draggedShiftId, setDraggedShiftId] = useState<string | null>(null);
   const [dragAction, setDragAction] = useState<'move' | 'swap' | null>(null);
+  
+  // State for custom shift modal
+  const [isCustomShiftModalOpen, setIsCustomShiftModalOpen] = useState(false);
   
   // Get unique days and time slots
   const days = Array.from(new Set(shifts.map((shift: Shift) => shift.day))) as string[];
@@ -113,79 +117,101 @@ const WeeklyCalendar: React.FC<WeeklyCalendarProps> = ({ useAiSuggestions = fals
     return employee ? employee.name : null;
   };
   
+  const handleAddCustomShift = (customShift: any) => {
+    // TODO: Implement logic to add custom shift to the schedule
+    console.log('Adding custom shift:', customShift);
+  };
+  
   return (
-    <div className="bg-white rounded-lg shadow overflow-hidden">
-      <div className="p-2 text-sm bg-gray-100 text-center text-gray-700 min-h-[32px] transition-opacity duration-200" 
-        style={{ opacity: isDragging ? 1 : 0 }}>
-        {isDragging && (
-          dragAction === 'swap' ? 
-            t('dragDrop.swapEmployees') : 
-            t('dragDrop.moveEmployee')
-        )}
+    <>
+      <div className="flex justify-end mb-4">
+        <button 
+          onClick={() => setIsCustomShiftModalOpen(true)}
+          className="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700"
+        >
+          {t('aiScheduler.addCustomShift')}
+        </button>
       </div>
-      <div className="grid grid-cols-8 border-b">
-        <div className="p-3 font-medium text-gray-500 border-r">{t('common.timeSlot')}</div>
-        {days.map((day) => (
-          <div key={day} className="p-3 font-medium text-center text-gray-800 border-r">
-            {t(`days.${day.toLowerCase()}`)}
+      
+      <div className="bg-white rounded-lg shadow overflow-hidden">
+        <div className="p-2 text-sm bg-gray-100 text-center text-gray-700 min-h-[32px] transition-opacity duration-200" 
+          style={{ opacity: isDragging ? 1 : 0 }}>
+          {isDragging && (
+            dragAction === 'swap' ? 
+              t('dragDrop.swapEmployees') : 
+              t('dragDrop.moveEmployee')
+          )}
+        </div>
+        <div className="grid grid-cols-8 border-b">
+          <div className="p-3 font-medium text-gray-500 border-r">{t('common.timeSlot')}</div>
+          {days.map((day) => (
+            <div key={day} className="p-3 font-medium text-center text-gray-800 border-r">
+              {t(`days.${day.toLowerCase()}`)}
+            </div>
+          ))}
+        </div>
+        
+        {timeSlots.map((timeSlot) => (
+          <div key={timeSlot} className="grid grid-cols-8 border-b">
+            <div className="p-3 font-medium text-gray-500 border-r flex items-center">
+              {t(`timeSlots.${timeSlot.toLowerCase()}`)}
+            </div>
+            
+            {days.map((day) => {
+              const shift = shifts.find((s: Shift) => s.day === day && s.timeSlot === timeSlot);
+              const hasEmployee = shift?.employeeId !== null;
+              
+              return (
+                <div
+                  key={`${day}-${timeSlot}`}
+                  className={`p-1 border-r h-24 ${useAiSuggestions ? 'cursor-default' : 'cursor-pointer'} ${isDragging ? 'droppable-cell' : ''}`}
+                  onClick={() => !useAiSuggestions && shift && handleShiftClick(shift)}
+                  onDragOver={!useAiSuggestions ? (e) => shift && handleDragOver(e, shift.id) : undefined}
+                  onDragLeave={!useAiSuggestions ? (e) => handleDragLeave(e) : undefined}
+                  onDrop={!useAiSuggestions ? (e) => shift && handleDrop(e, shift.id) : undefined}
+                >
+                  <div 
+                    className={`shift-card ${hasEmployee ? 'shift-card-assigned' : 'shift-card-empty'}`}
+                    draggable={!useAiSuggestions && hasEmployee}
+                    onDragStart={!useAiSuggestions && hasEmployee ? (e) => shift && handleDragStart(e, shift.id) : undefined}
+                    onDragEnd={!useAiSuggestions ? handleDragEnd : undefined}
+                  >
+                    {shift?.employeeId ? (
+                      <div className="h-full flex flex-col">
+                        <div className="flex justify-between items-start">
+                          <span className="font-medium">{getEmployeeName(shift.employeeId)}</span>
+                          {!useAiSuggestions && (
+                            <button
+                              onClick={(e) => handleClearShift(e, shift.id)}
+                              className="text-gray-400 hover:text-gray-600"
+                            >
+                              ×
+                            </button>
+                          )}
+                        </div>
+                        {shift.role && (
+                          <span className="mt-1 text-gray-600 text-xs">{shift.role}</span>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-center h-full text-gray-400">
+                        + {t('common.add')}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         ))}
       </div>
       
-      {timeSlots.map((timeSlot) => (
-        <div key={timeSlot} className="grid grid-cols-8 border-b">
-          <div className="p-3 font-medium text-gray-500 border-r flex items-center">
-            {t(`timeSlots.${timeSlot.toLowerCase()}`)}
-          </div>
-          
-          {days.map((day) => {
-            const shift = shifts.find((s: Shift) => s.day === day && s.timeSlot === timeSlot);
-            const hasEmployee = shift?.employeeId !== null;
-            
-            return (
-              <div
-                key={`${day}-${timeSlot}`}
-                className={`p-1 border-r h-24 ${useAiSuggestions ? 'cursor-default' : 'cursor-pointer'} ${isDragging ? 'droppable-cell' : ''}`}
-                onClick={() => !useAiSuggestions && shift && handleShiftClick(shift)}
-                onDragOver={!useAiSuggestions ? (e) => shift && handleDragOver(e, shift.id) : undefined}
-                onDragLeave={!useAiSuggestions ? (e) => handleDragLeave(e) : undefined}
-                onDrop={!useAiSuggestions ? (e) => shift && handleDrop(e, shift.id) : undefined}
-              >
-                <div 
-                  className={`shift-card ${hasEmployee ? 'shift-card-assigned' : 'shift-card-empty'}`}
-                  draggable={!useAiSuggestions && hasEmployee}
-                  onDragStart={!useAiSuggestions && hasEmployee ? (e) => shift && handleDragStart(e, shift.id) : undefined}
-                  onDragEnd={!useAiSuggestions ? handleDragEnd : undefined}
-                >
-                  {shift?.employeeId ? (
-                    <div className="h-full flex flex-col">
-                      <div className="flex justify-between items-start">
-                        <span className="font-medium">{getEmployeeName(shift.employeeId)}</span>
-                        {!useAiSuggestions && (
-                          <button
-                            onClick={(e) => handleClearShift(e, shift.id)}
-                            className="text-gray-400 hover:text-gray-600"
-                          >
-                            ×
-                          </button>
-                        )}
-                      </div>
-                      {shift.role && (
-                        <span className="mt-1 text-gray-600 text-xs">{shift.role}</span>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="flex items-center justify-center h-full text-gray-400">
-                      + {t('common.add')}
-                    </div>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      ))}
-    </div>
+      <CustomShiftModal 
+        isOpen={isCustomShiftModalOpen}
+        onClose={() => setIsCustomShiftModalOpen(false)}
+        onAddShift={handleAddCustomShift}
+      />
+    </>
   );
 };
 
