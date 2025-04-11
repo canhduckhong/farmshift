@@ -41,7 +41,16 @@
     "outOf": "ud af",
     "shiftsAssigned": "vagter tildelt",
     "applySuggestions": "Anvend Foreslået Vagtplan",
-    "description": "AI-planlæggeren tager hensyn til medarbejdernes kvalifikationer, præferencer og overholdelsesregler for at generere en optimal vagtplan."
+    "description": "AI-planlæggeren tager hensyn til medarbejdernes kvalifikationer, præferencer og overholdelsesregler for at generere en optimal vagtplan.",
+    "addCustomShift": "Tilføj Brugerdefineret Vagt",
+    "task": "Opgave",
+    "enterTask": "Indtast opgavebeskrivelse",
+    "date": "Dato",
+    "startTime": "Starttidspunkt", 
+    "endTime": "Sluttidspunkt",
+    "assignTo": "Tildel til",
+    "multiSelectHint": "Hold Ctrl/Cmd for at vælge flere medarbejdere",
+    "completeAllFields": "Udfyld venligst alle felter, før du tilføjer en vagt"
   },
   "dragDrop": {
     "moveEmployee": "✨ Slip på en tom vagt for at flytte medarbejder",

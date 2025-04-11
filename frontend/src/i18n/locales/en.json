@@ -41,7 +41,16 @@
     "outOf": "out of",
     "shiftsAssigned": "shifts assigned",
     "applySuggestions": "Apply Suggested Schedule",
-    "description": "The AI scheduler considers employee qualifications, preferences, and compliance regulations to generate an optimal schedule."
+    "description": "The AI scheduler considers employee qualifications, preferences, and compliance regulations to generate an optimal schedule.",
+    "addCustomShift": "Add Custom Shift",
+    "task": "Task",
+    "enterTask": "Enter task description",
+    "date": "Date",
+    "startTime": "Start Time",
+    "endTime": "End Time",
+    "assignTo": "Assign To",
+    "multiSelectHint": "Hold Ctrl/Cmd to select multiple employees",
+    "completeAllFields": "Please complete all fields before adding a shift"
   },
   "dragDrop": {
     "moveEmployee": "✨ Drop on an empty shift to move employee",
