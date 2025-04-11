@@ -2,7 +2,7 @@
   "name": "farmshift",
   "version": "1.0.0",
   "description": "",
-  "homepage": ".",
+  "homepage": "https://canhduckhong.github.io/farmshift/",
   "main": "index.js",
   "scripts": {
     "start": "BROWSER=none react-scripts start",
