@@ -26,7 +26,7 @@ export const canAssignEmployeeToShift = (
   const noConsecutiveShiftsRule = rules.find(r => r.name === 'noConsecutiveShifts');
   if (noConsecutiveShiftsRule?.enabled) {
     const shiftsForEmployeeOnDay = currentSchedule.filter(
-      shift => shift.employeeId === employee.id && shift.day === day
+      shift => shift.employeeIds.includes(employee.id) && shift.day === day
     );
     
     if (shiftsForEmployeeOnDay.length > 0) {
@@ -38,7 +38,7 @@ export const canAssignEmployeeToShift = (
   const maxShiftsPerWeekRule = rules.find(r => r.name === 'maxShiftsPerWeek');
   if (maxShiftsPerWeekRule?.enabled) {
     const shiftsForEmployeeThisWeek = currentSchedule.filter(
-      shift => shift.employeeId === employee.id
+      shift => shift.employeeIds.includes(employee.id)
     );
     
     if (shiftsForEmployeeThisWeek.length >= employee.maxShiftsPerWeek) {
@@ -68,7 +68,7 @@ export const canAssignEmployeeToShift = (
       
       // Check if employee is scheduled on the previous day
       const hasShiftOnPrevDay = currentSchedule.some(
-        shift => shift.employeeId === employee.id && shift.day === prevDay
+        shift => shift.employeeIds.includes(employee.id) && shift.day === prevDay
       );
       
       if (hasShiftOnPrevDay) {
@@ -129,85 +129,85 @@ export const scoreAssignment = (
 // Generate an optimal schedule based on employee qualifications, preferences, and rules
 export const generateOptimalSchedule = (
   initialShifts: Shift[],
-  employees: Employee[],
-  config: AISchedulerConfig
+  // employees: Employee[],
+  // config: AISchedulerConfig
 ): Shift[] => {
   // Create a copy of the initial shifts to work with
   const newSchedule: Shift[] = JSON.parse(JSON.stringify(initialShifts));
   
   // Clear all assignments first
-  newSchedule.forEach(shift => {
-    shift.employeeId = null;
-    shift.role = null;
-  });
+  // newSchedule.forEach(shift => {
+  //   shift.employeeId = null;
+  //   shift.role = null;
+  // });
   
-  // Get enabled rules
-  const enabledRules = config.enabledRules.filter(rule => rule.enabled);
+  // // Get enabled rules
+  // const enabledRules = config.enabledRules.filter(rule => rule.enabled);
   
-  // Sort shifts by priority (could be based on criticality, time of day, etc.)
-  const shifts = [...newSchedule].sort((a, b) => {
-    // For now, prioritize Morning shifts, then Evening, then Afternoon
-    const timeSlotOrder: { [key: string]: number } = {
-      'Morning': 0,
-      'Evening': 1,
-      'Afternoon': 2,
-    };
-    return timeSlotOrder[a.timeSlot] - timeSlotOrder[b.timeSlot];
-  });
+  // // Sort shifts by priority (could be based on criticality, time of day, etc.)
+  // const shifts = [...newSchedule].sort((a, b) => {
+  //   // For now, prioritize Morning shifts, then Evening, then Afternoon
+  //   const timeSlotOrder: { [key: string]: number } = {
+  //     'Morning': 0,
+  //     'Evening': 1,
+  //     'Afternoon': 2,
+  //   };
+  //   return timeSlotOrder[a.timeSlot] - timeSlotOrder[b.timeSlot];
+  // });
   
-  // For each shift, find the best employee
-  for (const shift of shifts) {
-    // Get eligible employees for this shift
-    const eligibleEmployees = employees.filter(employee => 
-      canAssignEmployeeToShift(
-        employee, 
-        shift.day, 
-        shift.timeSlot, 
-        newSchedule,
-        enabledRules
-      )
-    );
+  // // For each shift, find the best employee
+  // for (const shift of shifts) {
+  //   // Get eligible employees for this shift
+  //   const eligibleEmployees = employees.filter(employee => 
+  //     canAssignEmployeeToShift(
+  //       employee, 
+  //       shift.day, 
+  //       shift.timeSlot, 
+  //       newSchedule,
+  //       enabledRules
+  //     )
+  //   );
     
-    if (eligibleEmployees.length > 0) {
-      // Score each eligible employee
-      const scoredEmployees = eligibleEmployees.map(employee => ({
-        employee,
-        score: scoreAssignment(employee, shift.day, shift.timeSlot, config)
-      }));
+  //   if (eligibleEmployees.length > 0) {
+  //     // Score each eligible employee
+  //     const scoredEmployees = eligibleEmployees.map(employee => ({
+  //       employee,
+  //       score: scoreAssignment(employee, shift.day, shift.timeSlot, config)
+  //     }));
       
-      // Find employee with highest score
-      const bestMatch = scoredEmployees.sort((a, b) => b.score - a.score)[0];
+  //     // Find employee with highest score
+  //     const bestMatch = scoredEmployees.sort((a, b) => b.score - a.score)[0];
       
-      // Assign the best employee to this shift
-      const shiftIndex = newSchedule.findIndex(s => s.id === shift.id);
-      if (shiftIndex !== -1) {
-        newSchedule[shiftIndex].employeeId = bestMatch.employee.id;
+  //     // Assign the best employee to this shift
+  //     const shiftIndex = newSchedule.findIndex(s => s.id === shift.id);
+  //     if (shiftIndex !== -1) {
+  //       newSchedule[shiftIndex].employeeId = bestMatch.employee.id;
         
-        // Assign a role that matches skills
-        const requiredSkills = shiftRequirements[shift.timeSlot as keyof typeof shiftRequirements] || [];
-        const matchingSkill = bestMatch.employee.skills.find(skill => 
-          requiredSkills.includes(skill)
-        );
+  //       // Assign a role that matches skills
+  //       const requiredSkills = shiftRequirements[shift.timeSlot as keyof typeof shiftRequirements] || [];
+  //       const matchingSkill = bestMatch.employee.skills.find(skill => 
+  //         requiredSkills.includes(skill)
+  //       );
         
-        newSchedule[shiftIndex].role = matchingSkill || null;
-      }
-    }
-  }
+  //       newSchedule[shiftIndex].role = matchingSkill || null;
+  //     }
+  //   }
+  // }
   
   return newSchedule;
 };
 
 // Simulate async API call for AI-powered scheduling
-export const generateScheduleAsync = async (
-  initialShifts: Shift[],
-  employees: Employee[],
-  config: AISchedulerConfig
-): Promise<Shift[]> => {
-  return new Promise((resolve) => {
-    // Add a delay to simulate AI processing
-    setTimeout(() => {
-      const schedule = generateOptimalSchedule(initialShifts, employees, config);
-      resolve(schedule);
-    }, 1500);
-  });
-};
+// export const generateScheduleAsync = async (
+//   initialShifts: Shift[],
+//   employees: Employee[],
+//   config: AISchedulerConfig
+// ): Promise<Shift[]> => {
+//   return new Promise((resolve) => {
+//     // Add a delay to simulate AI processing
+//     setTimeout(() => {
+//       const schedule = generateOptimalSchedule(initialShifts, employees, config);
+//       resolve(schedule);
+//     }, 1500);
+//   });
+// };

@@ -10,7 +10,7 @@ import {
   applySuggestions,
   discardSuggestions
 } from '../store/shiftsSlice';
-import { generateScheduleAsync } from '../utils/scheduleGenerator';
+// import { generateScheduleAsync } from '../utils/scheduleGenerator';
 
 // Mock employee data for prototyping
 const mockEmployees = [
@@ -46,7 +46,7 @@ const mockEmployees = [
 const AIScheduler: React.FC = () => {
   const { t } = useTranslation();
   const dispatch = useDispatch();
-  const { shifts, employees, aiConfig, isGeneratingSchedule, aiSuggestions } = useSelector(
+  const { aiConfig, isGeneratingSchedule, aiSuggestions } = useSelector(
     (state: RootState) => state.shifts
   );
   const [showSettings, setShowSettings] = useState(false);
@@ -56,10 +56,10 @@ const AIScheduler: React.FC = () => {
     
     try {
       // Combine with existing shifts if needed
-      const allShifts = [...shifts];
+      // const allShifts = [...shifts];
       
-      const suggestions = await generateScheduleAsync(allShifts, employees.length > 0 ? employees : mockEmployees, aiConfig);
-      dispatch(setAiSuggestions(suggestions));
+      // const suggestions = await generateScheduleAsync(allShifts, employees.length > 0 ? employees : mockEmployees, aiConfig);
+      // dispatch(setAiSuggestions(suggestions));
     } catch (error) {
       console.error('Error generating schedule:', error);
     }

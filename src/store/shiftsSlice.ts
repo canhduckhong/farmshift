@@ -14,11 +14,9 @@ export const availableSkills = [
 
 // Shift requirements by time slot
 export const shiftRequirements = {
-  '04:30-08:30': ['Milking', 'Feeding', 'Cleaning'],
-  '08:30-12:30': ['Maintenance', 'General Care', 'Feeding'],
-  '10:00-14:00': ['Cleaning', 'Feeding', 'Maintenance'],
-  '14:00-18:00': ['Maintenance', 'General Care', 'Feeding'],
-  '18:00-22:00': ['Milking', 'Feeding', 'Animal Health Monitoring']
+  '04:30-12:30': ['Milking', 'Feeding', 'Cleaning'],
+  '12:30-20:30': ['Maintenance', 'General Care', 'Feeding'],
+  '20:30-04:30': ['Cleaning', 'Feeding', 'Maintenance'],
 };
 
 // Enhanced employee data with qualifications, preferences, etc.
@@ -109,7 +107,7 @@ export interface Shift {
   id: string;
   day: string;
   timeSlot: string;
-  employeeId: string | null;
+  employeeIds: string[];
   role: string | null;
 }
 
@@ -139,7 +137,7 @@ export interface ShiftsState {
 }
 
 const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-const timeSlots = ['04:30-08:30', '08:30-12:30', '10:00-14:00', '14:00-18:00', '18:00-22:00'];
+const timeSlots = ['04:30-12:30', '12:30-20:30', '20:30-04:30'];
 
 // Generate initial empty shifts
 const initialShifts: Shift[] = [];
@@ -149,7 +147,7 @@ days.forEach(day => {
       id: `${day}-${timeSlot}`,
       day,
       timeSlot,
-      employeeId: null,
+      employeeIds: [],
       role: null,
     });
   });
@@ -218,7 +216,10 @@ export const shiftsSlice = createSlice({
       if (state.selectedShift) {
         const shiftIndex = state.shifts.findIndex(shift => shift.id === state.selectedShift?.id);
         if (shiftIndex !== -1) {
-          state.shifts[shiftIndex].employeeId = employeeId;
+          // Add the employee only if they're not already assigned to this shift
+          if (!state.shifts[shiftIndex].employeeIds.includes(employeeId)) {
+            state.shifts[shiftIndex].employeeIds.push(employeeId);
+          }
           state.shifts[shiftIndex].role = role;
         }
       }
@@ -228,7 +229,7 @@ export const shiftsSlice = createSlice({
     clearShift: (state, action: PayloadAction<string>) => {
       const shiftIndex = state.shifts.findIndex(shift => shift.id === action.payload);
       if (shiftIndex !== -1) {
-        state.shifts[shiftIndex].employeeId = null;
+        state.shifts[shiftIndex].employeeIds = [];
         state.shifts[shiftIndex].role = null;
       }
     },
@@ -287,9 +288,13 @@ export const shiftsSlice = createSlice({
     deleteEmployee: (state, action: PayloadAction<string>) => {
       // Remove employee from shifts first
       state.shifts.forEach(shift => {
-        if (shift.employeeId === action.payload) {
-          shift.employeeId = null;
-          shift.role = null;
+        // Remove the employee ID from any shifts they're assigned to
+        if (shift.employeeIds.includes(action.payload)) {
+          shift.employeeIds = shift.employeeIds.filter(id => id !== action.payload);
+          // If shift now has no employees, clear the role
+          if (shift.employeeIds.length === 0) {
+            shift.role = null;
+          }
         }
       });
       
@@ -313,8 +318,8 @@ export const shiftsSlice = createSlice({
     },
 
     // Drag and drop functionality for shifts
-    moveEmployeeBetweenShifts: (state, action: PayloadAction<{sourceShiftId: string; targetShiftId: string}>) => {
-      const { sourceShiftId, targetShiftId } = action.payload;
+    moveEmployeeBetweenShifts: (state, action: PayloadAction<{sourceShiftId: string; targetShiftId: string; employeeId: string}>) => {
+      const { sourceShiftId, targetShiftId, employeeId } = action.payload;
       
       // Find the source and target shifts
       const sourceShiftIndex = state.shifts.findIndex(shift => shift.id === sourceShiftId);
@@ -324,30 +329,28 @@ export const shiftsSlice = createSlice({
         const sourceShift = state.shifts[sourceShiftIndex];
         const targetShift = state.shifts[targetShiftIndex];
         
-        // Only move if the source shift has an employee assigned
-        if (sourceShift.employeeId) {
-          // Save the employee data from source shift
-          const sourceEmployeeId = sourceShift.employeeId;
+        // Only move if the source shift has the specified employee assigned
+        if (sourceShift.employeeIds.includes(employeeId)) {
+          // Save the role from source shift
           const sourceRole = sourceShift.role;
           
-          // Check if target shift already has an employee assigned
-          if (targetShift.employeeId) {
-            // If target shift has an employee, perform a swap
-            const targetEmployeeId = targetShift.employeeId;
-            const targetRole = targetShift.role;
-            
-            // Move target employee to source shift
-            state.shifts[sourceShiftIndex].employeeId = targetEmployeeId;
-            state.shifts[sourceShiftIndex].role = targetRole;
-          } else {
-            // If target is empty, clear the source shift
-            state.shifts[sourceShiftIndex].employeeId = null;
+          // Remove employee from source shift
+          state.shifts[sourceShiftIndex].employeeIds = sourceShift.employeeIds.filter(id => id !== employeeId);
+          
+          // If source shift is now empty, clear its role
+          if (state.shifts[sourceShiftIndex].employeeIds.length === 0) {
             state.shifts[sourceShiftIndex].role = null;
           }
           
-          // Move source employee to target shift
-          state.shifts[targetShiftIndex].employeeId = sourceEmployeeId;
-          state.shifts[targetShiftIndex].role = sourceRole;
+          // Add employee to target shift if not already there
+          if (!targetShift.employeeIds.includes(employeeId)) {
+            state.shifts[targetShiftIndex].employeeIds.push(employeeId);
+          }
+          
+          // If target shift had no role, set it to the source role
+          if (targetShift.role === null) {
+            state.shifts[targetShiftIndex].role = sourceRole;
+          }
         }
       }
     },

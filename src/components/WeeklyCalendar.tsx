@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import { RootState } from '../store';
-import { Shift, selectShift, clearShift, moveEmployeeBetweenShifts } from '../store/shiftsSlice';
+import { Shift, selectShift, clearShift, moveEmployeeBetweenShifts, assignShift } from '../store/shiftsSlice';
 import CustomShiftModal from './CustomShiftModal';
 
 interface WeeklyCalendarProps {
@@ -41,17 +41,19 @@ const WeeklyCalendar: React.FC<WeeklyCalendarProps> = ({ useAiSuggestions = fals
     dispatch(selectShift(shift));
   };
   
-  const handleClearShift = (e: React.MouseEvent, shiftId: string) => {
-    e.stopPropagation();
-    dispatch(clearShift(shiftId));
-  };
+  // Clear all employees from a shift - used in certain situations
+  // const handleClearAllEmployees = (e: React.MouseEvent, shiftId: string) => {
+  //   e.stopPropagation();
+  //   dispatch(clearShift(shiftId));
+  // };
   
   // Drag and drop handlers
-  const handleDragStart = (e: React.DragEvent<HTMLDivElement>, shiftId: string) => {
-    if (useAiSuggestions || !e.currentTarget.classList.contains('shift-card-assigned')) return;
+  const handleDragStart = (e: React.DragEvent<HTMLDivElement>, shiftId: string, employeeId: string) => {
+    if (useAiSuggestions) return;
     
     setIsDragging(true);
     setDraggedShiftId(shiftId);
+    setDraggedEmployeeId(employeeId);
     e.dataTransfer.setData('text/plain', shiftId);
     e.dataTransfer.effectAllowed = 'move';
     
@@ -77,7 +79,7 @@ const WeeklyCalendar: React.FC<WeeklyCalendarProps> = ({ useAiSuggestions = fals
       const sourceShift = shifts.find((s: Shift) => s.id === draggedShiftId);
       const targetShift = shifts.find((s: Shift) => s.id === targetShiftId);
       
-      if (sourceShift && targetShift && targetShift.employeeId) {
+      if (sourceShift && targetShift && targetShift.employeeIds.length > 0) {
         setDragAction('swap');
         e.currentTarget.classList.add('swap-target');
       } else {
@@ -92,23 +94,32 @@ const WeeklyCalendar: React.FC<WeeklyCalendarProps> = ({ useAiSuggestions = fals
     e.currentTarget.classList.remove('swap-target');
   };
   
+  // Track which employee is being dragged
+  const [draggedEmployeeId, setDraggedEmployeeId] = useState<string | null>(null);
+
   const handleDrop = (e: React.DragEvent<HTMLDivElement>, targetShiftId: string) => {
     e.preventDefault();
     e.currentTarget.classList.remove('drag-over');
     
     const sourceShiftId = e.dataTransfer.getData('text/plain');
     
-    if (sourceShiftId && sourceShiftId !== targetShiftId && draggedShiftId) {
-      dispatch(moveEmployeeBetweenShifts({ sourceShiftId, targetShiftId }));
+    if (sourceShiftId && sourceShiftId !== targetShiftId && draggedShiftId && draggedEmployeeId) {
+      dispatch(moveEmployeeBetweenShifts({ 
+        sourceShiftId, 
+        targetShiftId,
+        employeeId: draggedEmployeeId
+      }));
     }
     
     setIsDragging(false);
     setDraggedShiftId(null);
+    setDraggedEmployeeId(null);
   };
   
   const handleDragEnd = () => {
     setIsDragging(false);
     setDraggedShiftId(null);
+    setDraggedEmployeeId(null);
     setDragAction(null);
     
     // Remove drag-over class from all cells
@@ -119,10 +130,32 @@ const WeeklyCalendar: React.FC<WeeklyCalendarProps> = ({ useAiSuggestions = fals
     });
   };
   
-  const getEmployeeName = (employeeId: string | null) => {
-    if (!employeeId) return null;
+  const getEmployeeName = (employeeId: string) => {
     const employee = employees.find((emp: { id: string }) => emp.id === employeeId);
     return employee ? employee.name : null;
+  };
+  
+  const removeEmployeeFromShift = (e: React.MouseEvent, shiftId: string, employeeId: string) => {
+    e.stopPropagation();
+    // Find the shift
+    const shift = shifts.find((s: Shift) => s.id === shiftId);
+    if (shift) {
+      // Create a new shift with this employee removed
+      const updatedShift = {
+        ...shift,
+        employeeIds: shift.employeeIds.filter(id => id !== employeeId)
+      };
+      
+      // If this was the last employee, clear the shift
+      if (updatedShift.employeeIds.length === 0) {
+        dispatch(clearShift(shiftId));
+      } else {
+        // Otherwise just update the shift with the employee removed
+        dispatch(selectShift(updatedShift));
+        // Use empty string as a placeholder since we're just removing
+        dispatch(assignShift({ employeeId: '', role: shift.role || null }));
+      }
+    }
   };
   
   const handleAddCustomShift = (customShift: any) => {
@@ -244,7 +277,7 @@ const WeeklyCalendar: React.FC<WeeklyCalendarProps> = ({ useAiSuggestions = fals
             
             {days.map((day) => {
               const shift = shifts.find((s: Shift) => s.day === day && s.timeSlot === timeSlot);
-              const hasEmployee = shift?.employeeId !== null;
+              const hasEmployees = shift && shift.employeeIds.length > 0;
               
               return (
                 <div
@@ -255,35 +288,51 @@ const WeeklyCalendar: React.FC<WeeklyCalendarProps> = ({ useAiSuggestions = fals
                   onDragLeave={!useAiSuggestions ? (e) => handleDragLeave(e) : undefined}
                   onDrop={!useAiSuggestions ? (e) => shift && handleDrop(e, shift.id) : undefined}
                 >
-                  <div 
-                    className={`shift-card ${hasEmployee ? 'shift-card-assigned' : 'shift-card-empty'}`}
-                    draggable={!useAiSuggestions && hasEmployee}
-                    onDragStart={!useAiSuggestions && hasEmployee ? (e) => shift && handleDragStart(e, shift.id) : undefined}
-                    onDragEnd={!useAiSuggestions ? handleDragEnd : undefined}
-                  >
-                    {shift?.employeeId ? (
-                      <div className="h-full flex flex-col">
-                        <div className="flex justify-between items-start">
-                          <span className="font-medium">{getEmployeeName(shift.employeeId)}</span>
-                          {!useAiSuggestions && (
-                            <button
-                              onClick={(e) => handleClearShift(e, shift.id)}
-                              className="text-gray-400 hover:text-gray-600"
-                            >
-                              ×
-                            </button>
-                          )}
+                  {hasEmployees ? (
+                    <div className="h-full flex flex-col">
+                      {shift && shift.role && (
+                        <div className="bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600 mb-1 rounded">
+                          {shift.role}
                         </div>
-                        {shift.role && (
-                          <span className="mt-1 text-gray-600 text-xs">{shift.role}</span>
-                        )}
+                      )}
+                      <div className="overflow-y-auto flex-1">
+                        {shift && shift.employeeIds.map(employeeId => (
+                          <div 
+                            key={employeeId}
+                            className="shift-card shift-card-assigned mb-1 p-1 rounded flex justify-between items-center bg-white shadow-sm"
+                            draggable={!useAiSuggestions}
+                            onDragStart={!useAiSuggestions ? (e) => handleDragStart(e, shift.id, employeeId) : undefined}
+                            onDragEnd={!useAiSuggestions ? handleDragEnd : undefined}
+                          >
+                            <span className="font-medium text-sm">{getEmployeeName(employeeId)}</span>
+                            {!useAiSuggestions && (
+                              <button
+                                onClick={(e) => removeEmployeeFromShift(e, shift.id, employeeId)}
+                                className="text-gray-400 hover:text-gray-600 text-xs ml-1"
+                              >
+                                ×
+                              </button>
+                            )}
+                          </div>
+                        ))}
                       </div>
-                    ) : (
-                      <div className="flex items-center justify-center h-full text-gray-400">
-                        + {t('common.add')}
-                      </div>
-                    )}
-                  </div>
+                      {!useAiSuggestions && (
+                        <button 
+                          onClick={() => shift && handleShiftClick(shift)}
+                          className="mt-1 text-xs text-blue-600 hover:text-blue-800 self-center"
+                        >
+                          + {t('common.add')}
+                        </button>
+                      )}
+                    </div>
+                  ) : (
+                    <div 
+                      className="flex items-center justify-center h-full text-gray-400 shift-card shift-card-empty"
+                      onClick={() => !useAiSuggestions && shift && handleShiftClick(shift)}
+                    >
+                      + {t('common.add')}
+                    </div>
+                  )}
                 </div>
               );
             })}
