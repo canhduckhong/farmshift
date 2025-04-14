@@ -8,7 +8,8 @@
     "apply": "Anvend",
     "discard": "Annuller",
     "close": "Luk",
-    "save": "Gem"
+    "save": "Gem",
+    "cancel": "Annuller"
   },
   "navigation": {
     "schedule": "Vagtplan",

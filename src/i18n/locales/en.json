@@ -8,7 +8,8 @@
     "apply": "Apply",
     "discard": "Discard",
     "close": "Close",
-    "save": "Save"
+    "save": "Save",
+    "cancel": "Cancel"
   },
   "navigation": {
     "schedule": "Schedule",
