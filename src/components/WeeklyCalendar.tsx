@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import { RootState } from '../store';
@@ -27,7 +27,15 @@ const WeeklyCalendar: React.FC<WeeklyCalendarProps> = ({ useAiSuggestions = fals
   
   // Get unique days and time slots
   const days = Array.from(new Set(shifts.map((shift: Shift) => shift.day))) as string[];
-  const timeSlots = Array.from(new Set(shifts.map((shift: Shift) => shift.timeSlot))) as string[];
+  const [timeSlots, setTimeSlots] = useState<string[]>(
+    Array.from(new Set(shifts.map((shift: Shift) => shift.timeSlot))) as string[]
+  );
+  
+  // State for add time slot popup
+  const [showAddTimeSlotPopup, setShowAddTimeSlotPopup] = useState(false);
+  const [newStartTime, setNewStartTime] = useState('');
+  const [newEndTime, setNewEndTime] = useState('');
+  const popupRef = useRef<HTMLDivElement>(null);
   
   const handleShiftClick = (shift: Shift) => {
     dispatch(selectShift(shift));
@@ -122,17 +130,22 @@ const WeeklyCalendar: React.FC<WeeklyCalendarProps> = ({ useAiSuggestions = fals
     console.log('Adding custom shift:', customShift);
   };
   
+  // Close popup when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (popupRef.current && !popupRef.current.contains(event.target as Node)) {
+        setShowAddTimeSlotPopup(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
   return (
     <>
-      <div className="flex justify-end mb-4">
-        <button 
-          onClick={() => setIsCustomShiftModalOpen(true)}
-          className="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700"
-        >
-          {t('aiScheduler.addCustomShift')}
-        </button>
-      </div>
-      
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <div className="p-2 text-sm bg-gray-100 text-center text-gray-700 min-h-[32px] transition-opacity duration-200" 
           style={{ opacity: isDragging ? 1 : 0 }}>
@@ -143,7 +156,79 @@ const WeeklyCalendar: React.FC<WeeklyCalendarProps> = ({ useAiSuggestions = fals
           )}
         </div>
         <div className="grid grid-cols-8 border-b">
-          <div className="p-3 font-medium text-gray-500 border-r">{t('common.timeSlot')}</div>
+          <div className="p-3 font-medium text-gray-500 border-r flex items-center justify-between">
+            <span>{t('common.timeSlot')}</span>
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowAddTimeSlotPopup(true);
+              }}
+              className="ml-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-full w-6 h-6 flex items-center justify-center focus:outline-none"
+              title="Add new time slot"
+            >
+              +
+            </button>
+            
+            {/* Popup for adding new time slot */}
+            {showAddTimeSlotPopup && (
+              <div 
+                ref={popupRef}
+                className="absolute z-50 bg-white shadow-lg rounded-md p-4 border border-gray-200"
+                style={{ top: '60px', left: '20px', width: '300px' }}
+              >
+                <div className="flex justify-between items-center mb-3">
+                  <h3 className="font-medium">Add New Time Slot</h3>
+                  <button
+                    onClick={() => setShowAddTimeSlotPopup(false)}
+                    className="text-gray-400 hover:text-gray-600"
+                  >
+                    ×
+                  </button>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-3 mb-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Start Time</label>
+                    <input 
+                      type="time"
+                      value={newStartTime}
+                      onChange={(e) => setNewStartTime(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">End Time</label>
+                    <input 
+                      type="time"
+                      value={newEndTime}
+                      onChange={(e) => setNewEndTime(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    />
+                  </div>
+                </div>
+                
+                <div className="flex justify-end">
+                  <button
+                    onClick={() => {
+                      if (newStartTime && newEndTime) {
+                        const newTimeSlot = `${newStartTime}-${newEndTime}`;
+                        // Add the new time slot if it doesn't already exist
+                        if (!timeSlots.includes(newTimeSlot)) {
+                          setTimeSlots(prev => [...prev, newTimeSlot].sort());
+                        }
+                        setNewStartTime('');
+                        setNewEndTime('');
+                        setShowAddTimeSlotPopup(false);
+                      }
+                    }}
+                    className="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700"
+                  >
+                    Add
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
           {days.map((day) => (
             <div key={day} className="p-3 font-medium text-center text-gray-800 border-r">
               {t(`days.${day.toLowerCase()}`)}
