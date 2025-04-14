@@ -107,11 +107,56 @@ const CustomShiftModal: React.FC<CustomShiftModalProps> = ({
       return;
     }
     
-    const shiftToAdd = {
-      ...newShift,
-      id: `shift-${Date.now()}`
+    // Get day name from date
+    const dayOfWeek = newShift.date ? 
+      new Date(newShift.date).toLocaleDateString('en-US', { weekday: 'long' }) : 
+      '';
+    
+    // Find the appropriate time slot based on start time
+    const findMatchingTimeSlot = () => {
+      // Get time slots from the store (these are fixed)
+      const availableTimeSlots = [
+        '04:30-08:30', 
+        '08:30-12:30', 
+        '10:00-14:00', 
+        '14:00-18:00', 
+        '18:00-22:00'
+      ];
+      
+      // Convert input time to minutes for comparison
+      const inputStartTime = newShift.startTime;
+      const [hours, minutes] = inputStartTime.split(':').map(Number);
+      const inputTimeInMinutes = hours * 60 + minutes;
+      
+      // Find closest matching time slot
+      let bestMatchTimeSlot = availableTimeSlots[0];
+      let smallestDifference = Infinity;
+      
+      for (const timeSlot of availableTimeSlots) {
+        const [start] = timeSlot.split('-');
+        const [slotHours, slotMinutes] = start.split(':').map(Number);
+        const slotTimeInMinutes = slotHours *.60 + slotMinutes;
+        
+        const difference = Math.abs(inputTimeInMinutes - slotTimeInMinutes);
+        if (difference < smallestDifference) {
+          smallestDifference = difference;
+          bestMatchTimeSlot = timeSlot;
+        }
+      }
+      
+      return bestMatchTimeSlot;
     };
     
+    const timeSlot = findMatchingTimeSlot();
+    
+    const shiftToAdd = {
+      ...newShift,
+      id: `shift-${Date.now()}`,
+      day: dayOfWeek,
+      timeSlot: timeSlot
+    };
+    
+    console.log('Adding custom shift with specific time slot:', shiftToAdd);
     onAddShift(shiftToAdd);
     onClose();
   };

@@ -154,7 +154,7 @@ const WeeklyCalendar: React.FC<WeeklyCalendarProps> = ({ useAiSuggestions = fals
         {timeSlots.map((timeSlot) => (
           <div key={timeSlot} className="grid grid-cols-8 border-b">
             <div className="p-3 font-medium text-gray-500 border-r flex items-center">
-              {t(`timeSlots.${timeSlot.toLowerCase()}`)}
+              {timeSlot}
             </div>
             
             {days.map((day) => {

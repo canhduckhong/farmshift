@@ -14,9 +14,11 @@ export const availableSkills = [
 
 // Shift requirements by time slot
 export const shiftRequirements = {
-  'Morning': ['Milking', 'Feeding', 'Cleaning'],
-  'Afternoon': ['Maintenance', 'General Care', 'Feeding'],
-  'Evening': ['Milking', 'Feeding', 'Animal Health Monitoring']
+  '04:30-08:30': ['Milking', 'Feeding', 'Cleaning'],
+  '08:30-12:30': ['Maintenance', 'General Care', 'Feeding'],
+  '10:00-14:00': ['Cleaning', 'Feeding', 'Maintenance'],
+  '14:00-18:00': ['Maintenance', 'General Care', 'Feeding'],
+  '18:00-22:00': ['Milking', 'Feeding', 'Animal Health Monitoring']
 };
 
 // Enhanced employee data with qualifications, preferences, etc.
@@ -137,7 +139,7 @@ export interface ShiftsState {
 }
 
 const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-const timeSlots = ['Morning', 'Afternoon', 'Evening'];
+const timeSlots = ['04:30-08:30', '08:30-12:30', '10:00-14:00', '14:00-18:00', '18:00-22:00'];
 
 // Generate initial empty shifts
 const initialShifts: Shift[] = [];
