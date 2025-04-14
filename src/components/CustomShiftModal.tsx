@@ -2,6 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import { RootState } from '../store';
+import { 
+  Select, 
+  MenuItem, 
+  FormControl, 
+  InputLabel, 
+  Chip, 
+  Box 
+} from '@mui/material';
 
 // Mock employee data for prototyping
 const mockEmployees = [
@@ -91,14 +99,6 @@ const CustomShiftModal: React.FC<CustomShiftModalProps> = ({
     }));
   };
 
-  const handleEmployeeSelection = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedOptions = Array.from(e.target.selectedOptions, option => option.value);
-    setNewShift(prev => ({
-      ...prev,
-      employeeIds: selectedOptions
-    }));
-  };
-
   const handleSubmit = () => {
     // Validate input
     if (!newShift.startTime || !newShift.endTime || 
@@ -182,21 +182,49 @@ const CustomShiftModal: React.FC<CustomShiftModalProps> = ({
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">{t('aiScheduler.assignTo')}</label>
-            <select
-              multiple
-              name="employeeIds"
-              value={newShift.employeeIds}
-              onChange={handleEmployeeSelection}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-              size={3}
-            >
-              {employees.map(employee => (
-                <option key={employee.id} value={employee.id}>
-                  {employee.name} ({employee.skills.join(', ')})
-                </option>
-              ))}
-            </select>
+            <FormControl fullWidth>
+              <InputLabel id="employee-select-label">{t('aiScheduler.assignTo')}</InputLabel>
+              <Select
+                labelId="employee-select-label"
+                id="employee-select"
+                multiple
+                value={newShift.employeeIds}
+                onChange={(e) => {
+                  const selectedEmployeeIds = e.target.value as string[];
+                  setNewShift(prev => ({
+                    ...prev,
+                    employeeIds: selectedEmployeeIds
+                  }));
+                }}
+                renderValue={(selected) => (
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                    {(selected as string[]).map((employeeId) => {
+                      const employee = employees.find(e => e.id === employeeId);
+                      return employee ? (
+                        <Chip 
+                          key={employeeId} 
+                          label={`${employee.name} (${employee.skills.join(', ')})`} 
+                        />
+                      ) : null;
+                    })}
+                  </Box>
+                )}
+                MenuProps={{
+                  PaperProps: {
+                    style: {
+                      maxHeight: 48 * 4.5,
+                      width: 250,
+                    },
+                  },
+                }}
+              >
+                {employees.map(employee => (
+                  <MenuItem key={employee.id} value={employee.id}>
+                    {employee.name} ({employee.skills.join(', ')})
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
             <p className="text-xs text-gray-500 mt-1">{t('aiScheduler.multiSelectHint')}</p>
           </div>
           

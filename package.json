@@ -36,6 +36,10 @@
   },
   "packageManager": "pnpm@9.4.0+sha1.9217c800d4ab947a7aee520242a7b70d64fc7638",
   "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.0",
+    "@mui/icons-material": "^7.0.2",
+    "@mui/material": "^7.0.2",
     "@reduxjs/toolkit": "^2.6.1",
     "@types/react": "^19.0.12",
     "@types/react-beautiful-dnd": "^13.1.8",
