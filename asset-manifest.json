@@ -1,13 +1,13 @@
 {
   "files": {
-    "main.css": "/farmshift/static/css/main.d8f49d69.css",
-    "main.js": "/farmshift/static/js/main.04684107.js",
+    "main.css": "/farmshift/static/css/main.0074db2c.css",
+    "main.js": "/farmshift/static/js/main.39ba9a12.js",
     "index.html": "/farmshift/index.html",
-    "main.d8f49d69.css.map": "/farmshift/static/css/main.d8f49d69.css.map",
-    "main.04684107.js.map": "/farmshift/static/js/main.04684107.js.map"
+    "main.0074db2c.css.map": "/farmshift/static/css/main.0074db2c.css.map",
+    "main.39ba9a12.js.map": "/farmshift/static/js/main.39ba9a12.js.map"
   },
   "entrypoints": [
-    "static/css/main.d8f49d69.css",
-    "static/js/main.04684107.js"
+    "static/css/main.0074db2c.css",
+    "static/js/main.39ba9a12.js"
   ]
 }
