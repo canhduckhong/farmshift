@@ -16,6 +16,7 @@ const SchedulePage: React.FC = () => {
 
   return (
     <div className="space-y-6">
+    <a href="https://app.qarmainspect.com/q/app/applink/audits?session_id=81863825-98d7-48b0-8259-97b58ef491ab&checkpoint_id=undefined">Qarma</a>
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold text-gray-800">{t('common.weeklySchedule')}</h1>
         <div className="flex items-center space-x-4">
